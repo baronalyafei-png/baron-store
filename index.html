@@ -1,130 +1,439 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>متجر البارون الإلكتروني</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Baron Electronics</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;800&display=swap" rel="stylesheet">
 
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple:#7b2cff;
+  --purple-glow:#b08cff;
+  --black:#0b0615;
+  --dark:#120824;
+  --light:#ffffff;
+  --gray:#f3f3f7;
+}
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Cairo', sans-serif;
-    }
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif}
 
-    body {
-      background: #0b0b0f;
-      color: #fff;
-    }
+body{
+  background:linear-gradient(180deg,#ffffff,#f4ecff);
+  color:#111;
+  transition:.4s ease;
+}
 
-    header {
-      background: linear-gradient(90deg, #0b0b0f, #1a0033);
-      padding: 20px;
-      text-align: center;
-      border-bottom: 1px solid #2a2a40;
-    }
+body.dark{
+  background:radial-gradient(circle at top,#140a2a,#000);
+  color:#fff;
+}
 
-    header h1 {
-      color: #b388ff;
-      font-size: 28px;
-    }
+header{
+  position:fixed;
+  width:100%;
+  top:0;
+  backdrop-filter:blur(16px);
+  background:rgba(255,255,255,.7);
+  border-bottom:1px solid rgba(123,44,255,.15);
+  z-index:1000;
+}
 
-    .products {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      padding: 30px;
-    }
+body.dark header{
+  background:rgba(10,0,25,.8);
+  border-bottom:1px solid rgba(176,140,255,.2);
+}
 
-    .card {
-      background: #11111a;
-      border-radius: 16px;
-      padding: 15px;
-      text-align: center;
-      border: 1px solid #2a2a40;
-      transition: 0.3s;
-    }
+.nav{
+  max-width:1300px;
+  margin:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:18px 30px;
+}
 
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 0 20px rgba(179, 136, 255, 0.2);
-    }
+.logo{
+  font-size:26px;
+  font-weight:800;
+  background:linear-gradient(135deg,var(--purple),var(--purple-glow));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
 
-    .card img {
-      width: 100%;
-      border-radius: 12px;
-      margin-bottom: 10px;
-    }
+.nav-buttons button{
+  margin-right:10px;
+}
 
-    .card h3 {
-      font-size: 18px;
-      margin-bottom: 8px;
-    }
+.btn{
+  background:linear-gradient(135deg,var(--purple),var(--purple-glow));
+  border:none;
+  color:#fff;
+  padding:10px 20px;
+  border-radius:14px;
+  font-weight:700;
+  cursor:pointer;
+  transition:.3s;
+  box-shadow:0 10px 30px rgba(123,44,255,.35);
+}
 
-    .price {
-      color: #b388ff;
-      font-size: 16px;
-      margin-bottom: 10px;
-    }
+.btn:hover{transform:translateY(-4px) scale(1.05)}
 
-    button {
-      background: linear-gradient(45deg, #7b2cff, #b388ff);
-      border: none;
-      padding: 10px 15px;
-      border-radius: 10px;
-      color: #fff;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+.toggle{
+  background:none;
+  border:2px solid var(--purple);
+  color:var(--purple);
+  padding:6px 12px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+}
 
-    button:hover {
-      opacity: 0.85;
-    }
+.hero{
+  padding-top:140px;
+  padding-bottom:80px;
+  text-align:center;
+}
 
-    footer {
-      text-align: center;
-      padding: 20px;
-      border-top: 1px solid #2a2a40;
-      margin-top: 20px;
-      color: #aaa;
-    }
-  </style>
+.hero h1{
+  font-size:56px;
+  font-weight:800;
+  margin-bottom:20px;
+  background:linear-gradient(135deg,#000,var(--purple));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+body.dark .hero h1{
+  background:linear-gradient(135deg,#fff,var(--purple-glow));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+.hero p{
+  font-size:18px;
+  opacity:.8;
+}
+
+.container{
+  max-width:1300px;
+  margin:auto;
+  padding:40px 30px 100px;
+}
+
+.products-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:30px;
+}
+
+.card{
+  background:#fff;
+  border-radius:28px;
+  padding:25px 25px 30px;
+  text-align:center;
+  transition:transform .15s ease;
+  box-shadow:0 25px 60px rgba(123,44,255,.08);
+  position:relative;
+  overflow:hidden;
+  transform-style:preserve-3d;
+  perspective:1000px;
+}
+
+.card::before{
+  content:"";
+  position:absolute;
+  top:-50%;
+  left:-50%;
+  width:200%;
+  height:200%;
+  background:radial-gradient(circle,var(--purple-glow),transparent 60%);
+  opacity:0;
+  transition:.5s;
+}
+
+.card:hover::before{
+  opacity:.08;
+}
+
+body.dark .card{
+  background:var(--dark);
+  box-shadow:0 25px 70px rgba(0,0,0,.6);
+}
+
+.card:hover{
+  transform:translateY(-15px) rotateX(5deg) rotateY(-5deg);
+}
+
+.card h3{
+  font-size:20px;
+  margin-bottom:10px;
+  transform:translateZ(40px);
+}
+
+.badge{
+  position:absolute;
+  top:15px;
+  left:15px;
+  background:linear-gradient(135deg,var(--purple),var(--purple-glow));
+  color:#fff;
+  padding:6px 12px;
+  border-radius:30px;
+  font-size:12px;
+  font-weight:700;
+  box-shadow:0 8px 20px rgba(123,44,255,.4);
+  transform:translateZ(60px);
+}
+
+.price{
+  font-weight:800;
+  color:var(--purple);
+  margin-bottom:15px;
+  font-size:18px;
+}
+
+.admin-panel{
+  display:none;
+  margin-top:80px;
+  padding:40px;
+  border-radius:24px;
+  background:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.1);
+}
+
+body.dark .admin-panel{
+  background:var(--dark);
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:20px;
+  margin-bottom:30px;
+}
+
+.stat{
+  background:var(--gray);
+  padding:20px;
+  border-radius:16px;
+  text-align:center;
+  font-weight:700;
+}
+
+body.dark .stat{
+  background:#1a1035;
+}
+
+input,select{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal-box{
+  background:#fff;
+  padding:30px;
+  border-radius:20px;
+  width:90%;
+  max-width:420px;
+}
+
+body.dark .modal-box{
+  background:var(--dark);
+}
+
+footer{
+  background:var(--black);
+  color:#bbb;
+  text-align:center;
+  padding:40px;
+}
+
+</style>
 </head>
 
 <body>
-  <header>
-    <h1>متجر البارون للإلكترونيات</h1>
-  </header>
 
-  <section class="products">
-    <div class="card">
-      <img src="https://via.placeholder.com/300x300" alt="سماعة بلوتوث">
-      <h3>سماعة بلوتوث S300</h3>
-      <div class="price">120 د.ل</div>
-      <button>أضف إلى السلة</button>
+<header>
+  <div class="nav">
+    <div class="logo">Baron</div>
+    <div class="nav-buttons">
+      <button class="toggle" onclick="toggleMode()">🌙</button>
+      <button class="btn" onclick="adminLogin()">لوحة الأدمن</button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <h1>Baron Luxury Electronics</h1>
+  <p>تجربة تسوق فاخرة بمستوى عالمي</p>
+</section>
+
+<div class="container">
+  <div class="products-grid" id="products"></div>
+
+  <div class="admin-panel" id="adminPanel">
+    <h2>لوحة تحكم الأدمن 👑</h2>
+
+    <div class="stats">
+      <div class="stat">الطلبات: <span id="ordersCount">0</span></div>
+      <div class="stat">المبيعات: <span id="salesTotal">0$</span></div>
+      <div class="stat">الأرباح: <span id="profitTotal">0$</span></div>
     </div>
 
-    <div class="card">
-      <img src="https://via.placeholder.com/300x300" alt="ساعة ذكية">
-      <h3>ساعة ذكية حديثة</h3>
-      <div class="price">180 د.ل</div>
-      <button>أضف إلى السلة</button>
-    </div>
+    <input id="newName" placeholder="اسم المنتج" />
+    <input id="newPrice" type="number" placeholder="السعر" />
+    <button class="btn" onclick="addProduct()">إضافة منتج</button>
 
-    <div class="card">
-      <img src="https://via.placeholder.com/300x300" alt="هاتف ذكي">
-      <h3>هاتف أندرويد قوي</h3>
-      <div class="price">950 د.ل</div>
-      <button>أضف إلى السلة</button>
-    </div>
-  </section>
+    <h3 style="margin-top:30px">الطلبات</h3>
+    <ul id="ordersList"></ul>
+  </div>
+</div>
 
-  <footer>
-    جميع الحقوق محفوظة © متجر البارون 2026
-  </footer>
+<div class="modal" id="paymentModal">
+  <div class="modal-box">
+    <h2>إتمام الطلب</h2>
+    <p id="productName"></p>
+
+    <input id="fullName" placeholder="الاسم الكامل" />
+    <input id="phone" placeholder="رقم الهاتف" />
+    <input id="address" placeholder="العنوان" />
+
+    <select id="paymentMethod">
+      <option value="cod">الدفع عند الاستلام</option>
+      <option value="bank">تحويل بنكي</option>
+    </select>
+
+    <button class="btn" onclick="confirmOrder()">تأكيد الطلب</button>
+  </div>
+</div>
+
+<footer>Baron Electronics © 2026</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+const firebaseConfig={
+ apiKey:"AIzaSyC8U9n2eCMqPgUWHx7YsiVDcEyUTZd09gU",
+ authDomain:"baron-ddaa3.firebaseapp.com",
+ projectId:"baron-ddaa3"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
+const ADMIN_EMAIL="baronalyafei@gmail.com";
+let selectedProduct=null;
+
+function toggleMode(){
+ document.body.classList.toggle("dark");
+ localStorage.setItem("mode",document.body.classList.contains("dark")?"dark":"light");
+}
+if(localStorage.getItem("mode")==="dark") document.body.classList.add("dark");
+
+function adminLogin(){
+ const email=prompt("أدخل بريد الأدمن:");
+ if(email===ADMIN_EMAIL){
+  adminPanel.style.display="block";
+  loadStats();
+  loadOrders();
+ }
+}
+
+function addProduct(){
+ const name=newName.value;
+ const price=Number(newPrice.value);
+ if(!name||!price) return alert("أدخل البيانات");
+ db.collection("products").add({name,price});
+ newName.value="";
+ newPrice.value="";
+}
+
+function loadProducts(){
+ db.collection("products").onSnapshot(snap=>{
+  products.innerHTML="";
+  let index=0;
+  snap.forEach(doc=>{
+   const p=doc.data();
+   const badge = index===0 ? 'الأكثر مبيعًا' : (index===1 ? 'جديد' : '');
+   products.innerHTML+=`
+   <div class="card" onmousemove="parallax(event,this)" onmouseleave="resetCard(this)">
+     ${badge ? `<div class="badge">${badge}</div>` : ``}
+     <div style="height:180px;background:linear-gradient(135deg,#f3e8ff,#ffffff);border-radius:18px;margin-bottom:15px;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--purple);font-size:18px;transform:translateZ(30px);">
+       ${p.name}
+     </div>
+     <h3>${p.name}</h3>
+     <div style="margin:8px 0;color:#ffc107;font-size:14px;transform:translateZ(35px);">★★★★★</div>
+     <div class="price" style="transform:translateZ(35px);">${p.price}$</div>
+     <button class="btn" style="transform:translateZ(45px);" onclick="openPayment('${p.name}',${p.price})">شراء الآن</button>
+   </div>`;
+   index++;
+  });
+ });
+}
+
+function openPayment(name,price){
+ selectedProduct={name,price};
+ productName.textContent=`${name} - ${price}$`;
+ paymentModal.style.display="flex";
+}
+
+function confirmOrder(){
+ const order={product:selectedProduct.name,price:selectedProduct.price,createdAt:Date.now()};
+ db.collection("orders").add(order);
+ paymentModal.style.display="none";
+}
+
+function loadStats(){
+ db.collection("orders").onSnapshot(snap=>{
+  let sales=0;
+  snap.forEach(d=>sales+=d.data().price);
+  ordersCount.textContent=snap.size;
+  salesTotal.textContent=sales+"$";
+  profitTotal.textContent=Math.round(sales*0.4)+"$";
+ });
+}
+
+function loadOrders(){
+ db.collection("orders").onSnapshot(snap=>{
+  ordersList.innerHTML="";
+  snap.forEach(d=>{
+   const o=d.data();
+   ordersList.innerHTML+=`<li>${o.product} - ${o.price}$</li>`;
+  });
+ });
+}
+
+loadProducts();
+
+// 3D Parallax Effect
+function parallax(e,card){
+ const rect=card.getBoundingClientRect();
+ const x=e.clientX-rect.left;
+ const y=e.clientY-rect.top;
+ const centerX=rect.width/2;
+ const centerY=rect.height/2;
+ const rotateX=-(y-centerY)/15;
+ const rotateY=(x-centerX)/15;
+ card.style.transform=`rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+}
+
+function resetCard(card){
+ card.style.transform="rotateX(0) rotateY(0) scale(1)";
+}
+</script>
+
 </body>
 </html>
