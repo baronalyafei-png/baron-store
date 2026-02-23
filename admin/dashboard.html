@@ -2,139 +2,203 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard - Baron</title>
+<title>Baron Admin Panel</title>
 
 <style>
 body{
+    margin:0;
+    font-family:Arial;
     background:#0A0A0A;
     color:#EFEFEF;
-    font-family:Arial;
-    margin:0;
-    padding:20px;
+    display:flex;
 }
 
-h1{
+/* Sidebar */
+.sidebar{
+    width:250px;
+    background:#111;
+    height:100vh;
+    padding:20px;
+    box-shadow:0 0 20px rgba(181,60,184,0.3);
+}
+
+.sidebar h2{
     text-align:center;
+    margin-bottom:30px;
+}
+
+.sidebar button{
+    width:100%;
+    margin-bottom:10px;
+    padding:10px;
+    background:none;
+    border:1px solid #B53CB8;
+    color:#EFEFEF;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.sidebar button:hover{
+    background:#B53CB8;
+}
+
+/* Content */
+.content{
+    flex:1;
+    padding:30px;
 }
 
 .section{
-    margin-top:40px;
+    display:none;
 }
 
-.order-card{
+.section.active{
+    display:block;
+}
+
+.card{
     background:#111;
     padding:15px;
     border-radius:10px;
     margin-bottom:15px;
-    box-shadow:0 0 15px rgba(181,60,184,0.3);
+    box-shadow:0 0 15px rgba(181,60,184,0.2);
 }
 
-button{
-    margin-top:10px;
-    padding:6px 10px;
+button.action{
     background:#B53CB8;
     border:none;
-    color:white;
+    padding:6px 10px;
     border-radius:6px;
+    color:white;
     cursor:pointer;
-}
-button:hover{
-    opacity:0.9;
 }
 
 .logout{
-    margin-top:40px;
-    background:#444;
+    margin-top:30px;
+    background:#444 !important;
 }
 </style>
 </head>
 
 <body>
 
-<h1>لوحة تحكم Baron 👑</h1>
+<div class="sidebar">
+<h2>Baron 👑</h2>
 
-<div class="section">
-<h2>طلبات جديدة</h2>
-<div id="newOrders"></div>
+<button onclick="showSection('dashboard')">🏠 الرئيسية</button>
+<button onclick="showSection('products')">📦 المنتجات</button>
+<button onclick="showSection('orders')">🛒 الطلبات</button>
+<button id="logoutBtn" class="logout">🚪 تسجيل خروج</button>
 </div>
 
-<div class="section">
-<h2>قيد التجهيز</h2>
-<div id="processingOrders"></div>
+<div class="content">
+
+<!-- Dashboard -->
+<div id="dashboard" class="section active">
+<h1>مرحبًا بك في لوحة التحكم 👑</h1>
+<p>نظام إدارة Baron Electronics</p>
 </div>
 
-<div class="section">
-<h2>تم التسليم</h2>
-<div id="deliveredOrders"></div>
+<!-- Products -->
+<div id="products" class="section">
+<h1>إدارة المنتجات</h1>
+
+<input type="text" id="productName" placeholder="اسم المنتج"><br><br>
+<input type="number" id="productPrice" placeholder="السعر"><br><br>
+<input type="text" id="productCategory" placeholder="الفئة"><br><br>
+<input type="text" id="productColor" placeholder="اللون"><br><br>
+<textarea id="productDescription" placeholder="الوصف"></textarea><br><br>
+<input type="text" id="productImage" placeholder="رابط الصورة"><br><br>
+
+<button class="action" onclick="addProduct()">إضافة المنتج</button>
+
+<h3 style="margin-top:30px;">قائمة المنتجات</h3>
+<div id="productList"></div>
 </div>
 
-<button id="logoutBtn" class="logout">تسجيل خروج</button>
+<!-- Orders -->
+<div id="orders" class="section">
+<h1>إدارة الطلبات</h1>
+<div id="ordersContainer"></div>
+</div>
+
+</div>
 
 <script type="module">
 
 import { auth, db } from "../firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// حماية الصفحة
-onAuthStateChanged(auth, (user) => {
-    if (!user) {
-        window.location.href = "login.html";
+/* حماية */
+onAuthStateChanged(auth, (user)=>{
+    if(!user){
+        window.location.href="login.html";
     }
 });
 
-// تسجيل خروج
-document.getElementById("logoutBtn").addEventListener("click", () => {
-    signOut(auth).then(() => {
-        window.location.href = "login.html";
+/* تسجيل خروج */
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
+    signOut(auth).then(()=>{
+        window.location.href="login.html";
     });
 });
 
-const newDiv = document.getElementById("newOrders");
-const processingDiv = document.getElementById("processingOrders");
-const deliveredDiv = document.getElementById("deliveredOrders");
+/* تنقل */
+window.showSection = function(id){
+    document.querySelectorAll(".section").forEach(sec=>{
+        sec.classList.remove("active");
+    });
+    document.getElementById(id).classList.add("active");
+};
 
-async function loadOrders(){
+/* إضافة منتج */
+window.addProduct = async function(){
 
-    const querySnapshot = await getDocs(collection(db, "orders"));
+    const name = productName.value;
+    const price = Number(productPrice.value);
+    const category = productCategory.value;
+    const color = productColor.value;
+    const description = productDescription.value;
+    const image = productImage.value;
 
-    newDiv.innerHTML = "";
-    processingDiv.innerHTML = "";
-    deliveredDiv.innerHTML = "";
+    await addDoc(collection(db,"products"),{
+        name,price,category,color,description,image,
+        createdAt:new Date()
+    });
 
-    querySnapshot.forEach((docSnap) => {
+    alert("تمت الإضافة 👑");
+    loadProducts();
+};
 
-        const order = docSnap.data();
-        const id = docSnap.id;
-
-        const html = `
-            <div class="order-card">
-                <p><strong>الاسم:</strong> ${order.customerName}</p>
-                <p><strong>الهاتف:</strong> ${order.customerPhone}</p>
-                <p><strong>الإجمالي:</strong> ${order.total} د.ل</p>
-                <p><strong>الحالة:</strong> ${order.status}</p>
-                <button onclick="updateStatus('${id}','قيد التجهيز')">قيد التجهيز</button>
-                <button onclick="updateStatus('${id}','تم التسليم')">تم التسليم</button>
+/* عرض المنتجات */
+async function loadProducts(){
+    const snapshot = await getDocs(collection(db,"products"));
+    productList.innerHTML="";
+    snapshot.forEach(docSnap=>{
+        const p = docSnap.data();
+        productList.innerHTML+=`
+            <div class="card">
+                ${p.name} - ${p.price} د.ل
             </div>
         `;
-
-        if(order.status === "طلب جديد"){
-            newDiv.innerHTML += html;
-        }else if(order.status === "قيد التجهيز"){
-            processingDiv.innerHTML += html;
-        }else{
-            deliveredDiv.innerHTML += html;
-        }
-
     });
 }
+loadProducts();
 
-window.updateStatus = async function(id, status){
-    const orderRef = doc(db, "orders", id);
-    await updateDoc(orderRef, { status: status });
-    loadOrders();
+/* عرض الطلبات */
+async function loadOrders(){
+    const snapshot = await getDocs(collection(db,"orders"));
+    ordersContainer.innerHTML="";
+    snapshot.forEach(docSnap=>{
+        const o = docSnap.data();
+        ordersContainer.innerHTML+=`
+            <div class="card">
+                ${o.customerName} - ${o.total} د.ل - ${o.status}
+            </div>
+        `;
+    });
 }
-
 loadOrders();
 
 </script>
