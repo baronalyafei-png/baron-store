@@ -64,13 +64,17 @@ async function loadProducts(){
         const product = doc.data();
 
         container.innerHTML += `
-            <div class="card">
-                <img src="${product.image}" alt="">
-                <h3>${product.name}</h3>
-                <p>${product.description}</p>
-                <p>اللون: ${product.color}</p>
-                <p class="price">${product.price} د.ل</p>
-            </div>
+    <div class="card">
+        <img src="${product.image}" alt="">
+        <h3>${product.name}</h3>
+        <p>${product.description}</p>
+        <p>اللون: ${product.color}</p>
+        <p class="price">${product.price} د.ل</p>
+        <button onclick='addToCart(${JSON.stringify(product)})'
+            style="margin-top:10px;padding:8px;background:#B53CB8;border:none;color:white;border-radius:8px;cursor:pointer;width:100%;">
+            أضف إلى السلة
+        </button>
+    </div>
         `;
     });
 }
@@ -78,7 +82,17 @@ async function loadProducts(){
 loadProducts();
 
 </script>
+window.addToCart = function(product){
 
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+    cart.push(product);
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    alert("تمت إضافة المنتج إلى السلة 🛒");
+}
 </body>
 </html>
+
 
