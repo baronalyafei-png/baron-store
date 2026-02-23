@@ -13,10 +13,16 @@ body{margin:0;font-family:Arial;background:#0A0A0A;color:#EFEFEF;display:flex}
 .content{flex:1;padding:30px}
 .section{display:none}
 .section.active{display:block}
-.card{background:#111;padding:15px;border-radius:10px;margin-bottom:15px;box-shadow:0 0 15px rgba(181,60,184,0.2)}
-.low-stock{border:1px solid red}
 .stat-box{background:#111;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 0 20px rgba(181,60,184,0.3)}
-.stat-number{font-size:28px;color:#B53CB8}
+.stat-number{font-size:24px;color:#B53CB8}
+.notification{
+background:#2a0f0f;
+border:1px solid red;
+padding:15px;
+border-radius:10px;
+margin-bottom:20px;
+color:#ff8080;
+}
 .logout{margin-top:30px;background:#444!important}
 </style>
 </head>
@@ -26,46 +32,39 @@ body{margin:0;font-family:Arial;background:#0A0A0A;color:#EFEFEF;display:flex}
 <div class="sidebar">
 <h2>Baron 👑</h2>
 <button onclick="showSection('dashboard')">📊 التحليلات</button>
-<button onclick="showSection('inventory')">📦 المخزون</button>
 <button onclick="showSection('orders')">🛒 الطلبات</button>
 <button id="logoutBtn" class="logout">🚪 تسجيل خروج</button>
 </div>
 
 <div class="content">
 
-<!-- Analytics -->
 <div id="dashboard" class="section active">
-<h1>تحليلات المتجر</h1>
+<h1>لوحة التحليلات</h1>
+
+<div id="notificationArea"></div>
 
 <div class="stat-box">
-عدد المنتجات
-<div class="stat-number" id="totalProducts">0</div>
+مبيعات اليوم
+<div class="stat-number" id="todaySales">0</div>
 </div>
 
 <div class="stat-box">
-عدد الطلبات
-<div class="stat-number" id="totalOrders">0</div>
+طلبات اليوم
+<div class="stat-number" id="todayOrders">0</div>
 </div>
 
 <div class="stat-box">
-إجمالي المبيعات
+مبيعات هذا الشهر
+<div class="stat-number" id="monthSales">0</div>
+</div>
+
+<div class="stat-box">
+إجمالي المبيعات الكلي
 <div class="stat-number" id="totalSales">0</div>
 </div>
 
-<div class="stat-box">
-منتجات منخفضة المخزون
-<div class="stat-number" id="lowStockCount">0</div>
 </div>
 
-</div>
-
-<!-- Inventory -->
-<div id="inventory" class="section">
-<h1>إدارة المخزون</h1>
-<div id="inventoryList"></div>
-</div>
-
-<!-- Orders -->
 <div id="orders" class="section">
 <h1>إدارة الطلبات</h1>
 <div id="ordersContainer"></div>
@@ -93,41 +92,51 @@ window.showSection = function(id){
 };
 
 async function loadAnalytics(){
+
     const productsSnap = await getDocs(collection(db,"products"));
     const ordersSnap = await getDocs(collection(db,"orders"));
 
-    document.getElementById("totalProducts").innerText = productsSnap.size;
-    document.getElementById("totalOrders").innerText = ordersSnap.size;
+    let lowStock=0;
+    productsSnap.forEach(doc=>{
+        if(doc.data().stock <= 5){lowStock++;}
+    });
+
+    if(lowStock > 0){
+        document.getElementById("notificationArea").innerHTML =
+        `<div class="notification">
+        ⚠ يوجد ${lowStock} منتجات منخفضة المخزون
+        </div>`;
+    }
 
     let totalSales=0;
-    let lowStock=0;
+    let todaySales=0;
+    let monthSales=0;
+    let todayOrders=0;
 
-    productsSnap.forEach(doc=>{
-        const p=doc.data();
-        if(p.stock <= 5){lowStock++;}
-    });
+    const now = new Date();
+    const today = now.toDateString();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
 
     ordersSnap.forEach(doc=>{
-        totalSales += doc.data().total;
+        const o = doc.data();
+        const orderDate = o.createdAt.toDate();
+        totalSales += o.total;
+
+        if(orderDate.toDateString() === today){
+            todaySales += o.total;
+            todayOrders++;
+        }
+
+        if(orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear){
+            monthSales += o.total;
+        }
     });
 
+    document.getElementById("todaySales").innerText = todaySales + " د.ل";
+    document.getElementById("todayOrders").innerText = todayOrders;
+    document.getElementById("monthSales").innerText = monthSales + " د.ل";
     document.getElementById("totalSales").innerText = totalSales + " د.ل";
-    document.getElementById("lowStockCount").innerText = lowStock;
-}
-
-async function loadInventory(){
-    const snapshot = await getDocs(collection(db,"products"));
-    inventoryList.innerHTML="";
-    snapshot.forEach(doc=>{
-        const p = doc.data();
-        const lowClass = p.stock <= 5 ? "low-stock" : "";
-        inventoryList.innerHTML += `
-            <div class="card ${lowClass}">
-                <strong>${p.name}</strong><br>
-                الكمية المتاحة: ${p.stock}
-            </div>
-        `;
-    });
 }
 
 async function loadOrders(){
@@ -135,8 +144,8 @@ async function loadOrders(){
     ordersContainer.innerHTML="";
     snapshot.forEach(doc=>{
         const o = doc.data();
-        ordersContainer.innerHTML += `
-            <div class="card">
+        ordersContainer.innerHTML+=`
+            <div class="stat-box">
                 ${o.customerName} - ${o.total} د.ل - ${o.status}
             </div>
         `;
@@ -144,7 +153,6 @@ async function loadOrders(){
 }
 
 loadAnalytics();
-loadInventory();
 loadOrders();
 
 </script>
