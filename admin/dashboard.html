@@ -2,7 +2,7 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Baron System</title>
+<title>Baron System ERP</title>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -13,12 +13,14 @@
 --bg:#F8FAFC;
 --card:#FFFFFF;
 --text:#111827;
+--shadow:0 10px 30px rgba(0,0,0,0.05);
 }
 
 body.dark{
 --bg:#0F172A;
 --card:#1E293B;
 --text:#F1F5F9;
+--shadow:0 10px 30px rgba(0,0,0,0.3);
 }
 
 body{
@@ -30,13 +32,17 @@ display:flex;
 transition:0.3s;
 }
 
+/* Sidebar */
 .sidebar{
 width:260px;
 background:var(--card);
 height:100vh;
 padding:20px;
-box-shadow:0 0 20px rgba(0,0,0,0.05);
+box-shadow:var(--shadow);
 overflow-y:auto;
+position:fixed;
+right:0;
+top:0;
 }
 
 .sidebar h2{
@@ -45,19 +51,21 @@ margin-bottom:20px;
 
 .sidebar button{
 width:100%;
-padding:10px;
+padding:12px;
 margin-bottom:8px;
 border:none;
 background:none;
 text-align:right;
 cursor:pointer;
 border-radius:8px;
+font-weight:600;
 }
 
 .sidebar button:hover{
 background:rgba(79,70,229,0.1);
 }
 
+/* Topbar */
 .topbar{
 position:fixed;
 right:260px;
@@ -68,9 +76,11 @@ display:flex;
 align-items:center;
 justify-content:space-between;
 padding:0 20px;
-box-shadow:0 2px 10px rgba(0,0,0,0.05);
+box-shadow:var(--shadow);
+z-index:100;
 }
 
+/* Content */
 .content{
 margin-top:70px;
 margin-right:260px;
@@ -78,20 +88,31 @@ padding:30px;
 width:100%;
 }
 
-.section{
-display:none;
-}
-
-.section.active{
-display:block;
-}
+.section{display:none;}
+.section.active{display:block;}
 
 .card{
 background:var(--card);
 padding:20px;
-border-radius:12px;
+border-radius:14px;
 margin-bottom:15px;
-box-shadow:0 5px 20px rgba(0,0,0,0.05);
+box-shadow:var(--shadow);
+}
+
+button.action{
+background:var(--primary);
+color:white;
+border:none;
+padding:8px 14px;
+border-radius:8px;
+cursor:pointer;
+}
+
+input{
+padding:8px;
+border-radius:8px;
+border:1px solid #ccc;
+margin:5px;
 }
 
 .toast{
@@ -104,9 +125,10 @@ padding:15px 20px;
 border-radius:10px;
 display:none;
 }
-.toggle{
-cursor:pointer;
-}
+
+.toggle{cursor:pointer;}
+table{width:100%;border-collapse:collapse;}
+th,td{padding:8px;border-bottom:1px solid #ddd;text-align:center;}
 </style>
 </head>
 
@@ -115,27 +137,18 @@ cursor:pointer;
 <div class="sidebar">
 <h2>Baron System 👑</h2>
 
-<button onclick="show('dashboard')">🏠 الرئيسية</button>
-<button onclick="show('pos')">🛒 POS</button>
-<button onclick="show('analytics')">📊 التحليلات</button>
-<button onclick="show('suppliers')">🏢 الموردين</button>
-<button onclick="show('agents')">👨‍💼 المندوبين</button>
-<button onclick="show('inventory')">📦 المخزون</button>
-<button onclick="show('invoices')">🧾 الفواتير</button>
-<button onclick="show('debts')">💰 الديون</button>
-<button onclick="show('subscriptions')">💳 الاشتراكات</button>
-<button onclick="show('maintenance')">🛠 الصيانة</button>
-<button onclick="show('marketing')">🎯 التسويق</button>
-<button onclick="show('orders')">📦 الطلبات</button>
+<button onclick="showSection('dashboard')">🏠 الرئيسية</button>
+<button onclick="showSection('pos')">🛒 POS</button>
+<button onclick="showSection('inventory')">📦 المخزون</button>
+<button onclick="showSection('analytics')">📊 التحليلات</button>
+<button onclick="showSection('marketing')" id="marketingBtn">🎯 التسويق</button>
 
 <hr>
 <button onclick="logout()">🚪 تسجيل خروج</button>
 </div>
 
 <div class="topbar">
-<div>
-<span id="userRole"></span>
-</div>
+<div id="userRole"></div>
 <div>
 <span class="toggle" onclick="toggleMode()">🌙 / ☀️</span>
 </div>
@@ -143,38 +156,99 @@ cursor:pointer;
 
 <div class="content">
 
+<!-- Dashboard -->
 <div id="dashboard" class="section active">
-<div class="card">مرحبًا بك في Baron System</div>
+<h2>لوحة التحكم</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-top:20px;">
+<div class="card">
+<h3>المبيعات اليوم</h3>
+<h2 id="todaySales">0 د.ل</h2>
+</div>
+<div class="card">
+<h3>عدد المنتجات</h3>
+<h2 id="totalProducts">0</h2>
+</div>
+<div class="card">
+<h3>عدد العمليات</h3>
+<h2 id="totalOrders">0</h2>
+</div>
+</div>
 </div>
 
-<div id="pos" class="section"><div class="card">نقطة البيع (قيد التطوير)</div></div>
-<div id="analytics" class="section"><div class="card">التحليلات</div></div>
-<div id="suppliers" class="section"><div class="card">الموردين</div></div>
-<div id="agents" class="section"><div class="card">المندوبين</div></div>
-<div id="inventory" class="section"><div class="card">المخزون</div></div>
-<div id="invoices" class="section"><div class="card">الفواتير</div></div>
-<div id="debts" class="section"><div class="card">الديون</div></div>
-<div id="subscriptions" class="section"><div class="card">الاشتراكات</div></div>
-<div id="maintenance" class="section"><div class="card">الصيانة</div></div>
-<div id="marketing" class="section"><div class="card">التسويق</div></div>
-<div id="orders" class="section"><div class="card">الطلبات</div></div>
+<!-- POS -->
+<div id="pos" class="section">
+<h2>نقطة البيع</h2>
+
+<div class="card">
+<input type="text" id="productName" placeholder="اسم المنتج">
+<input type="number" id="productPrice" placeholder="السعر">
+<button class="action" onclick="addToCart()">إضافة</button>
+</div>
+
+<div class="card">
+<h3>السلة</h3>
+<ul id="cartList"></ul>
+<h3 id="cartTotal">المجموع: 0 د.ل</h3>
+<button class="action" onclick="completeSale()">إتمام البيع</button>
+</div>
+</div>
+
+<!-- Inventory -->
+<div id="inventory" class="section">
+<h2>المخزون</h2>
+
+<div class="card">
+<input type="text" id="invName" placeholder="اسم المنتج">
+<input type="number" id="invQty" placeholder="الكمية">
+<button class="action" onclick="addProduct()">إضافة</button>
+</div>
+
+<div class="card">
+<table>
+<thead>
+<tr><th>المنتج</th><th>الكمية</th></tr>
+</thead>
+<tbody id="inventoryTable"></tbody>
+</table>
+</div>
+</div>
+
+<!-- Analytics -->
+<div id="analytics" class="section">
+<h2>التحليلات</h2>
+<div class="card">قريبًا سيتم ربطها بـ Firebase + Charts</div>
+</div>
+
+<!-- Marketing -->
+<div id="marketing" class="section">
+<h2>قسم التسويق</h2>
+<div class="card">
+<textarea id="promoText" placeholder="اكتب الرسالة التسويقية" style="width:100%;height:100px;"></textarea>
+<button class="action" onclick="sendPromo()">إرسال</button>
+</div>
+</div>
 
 </div>
 
 <div id="toast" class="toast"></div>
 
-<script type="module">
+<script>
+let cart=[];
+let inventory=[];
+let totalSales=0;
+let totalOrders=0;
+let userRole="admin"; // مؤقت حتى نربطه بـ Firebase
 
-import { auth, db } from "../firebase-config.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-window.show = function(id){
+function showSection(id){
+if(userRole==="staff" && id==="marketing"){
+showToast("غير مصرح لك بالدخول");
+return;
+}
 document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
 document.getElementById(id).classList.add('active');
 }
 
-window.toggleMode = function(){
+function toggleMode(){
 document.body.classList.toggle('dark');
 localStorage.setItem('mode',document.body.classList.contains('dark')?'dark':'light');
 }
@@ -183,32 +257,73 @@ if(localStorage.getItem('mode')==='dark'){
 document.body.classList.add('dark');
 }
 
-window.showToast = function(msg){
+function showToast(msg){
 const toast=document.getElementById('toast');
 toast.innerText=msg;
 toast.style.display='block';
 setTimeout(()=>toast.style.display='none',3000);
 }
 
-window.logout = function(){
-signOut(auth).then(()=>location.href="login.html");
+function addToCart(){
+const name=document.getElementById("productName").value;
+const price=parseFloat(document.getElementById("productPrice").value);
+if(!name||!price) return;
+
+cart.push({name,price});
+renderCart();
 }
 
-onAuthStateChanged(auth, async (user)=>{
-if(!user){location.href="login.html";return;}
-
-const userDoc = await getDoc(doc(db,"users",user.uid));
-if(userDoc.exists()){
-const role=userDoc.data().role;
-document.getElementById("userRole").innerText="الصلاحية: "+role;
-if(role==="staff"){
-// إخفاء بعض الأقسام
-document.querySelector("button[onclick=\"show('marketing')\"]").style.display="none";
-document.querySelector("button[onclick=\"show('suppliers')\"]").style.display="none";
-}
-}
+function renderCart(){
+const list=document.getElementById("cartList");
+list.innerHTML="";
+let total=0;
+cart.forEach(item=>{
+total+=item.price;
+list.innerHTML+=`<li>${item.name} - ${item.price} د.ل</li>`;
 });
+document.getElementById("cartTotal").innerText="المجموع: "+total+" د.ل";
+}
 
+function completeSale(){
+let saleTotal=0;
+cart.forEach(i=>saleTotal+=i.price);
+totalSales+=saleTotal;
+totalOrders++;
+document.getElementById("todaySales").innerText=totalSales+" د.ل";
+document.getElementById("totalOrders").innerText=totalOrders;
+cart=[];
+renderCart();
+showToast("تمت عملية البيع بنجاح");
+}
+
+function addProduct(){
+const name=document.getElementById("invName").value;
+const qty=document.getElementById("invQty").value;
+if(!name||!qty) return;
+
+inventory.push({name,qty});
+renderInventory();
+document.getElementById("totalProducts").innerText=inventory.length;
+showToast("تم إضافة المنتج");
+}
+
+function renderInventory(){
+const table=document.getElementById("inventoryTable");
+table.innerHTML="";
+inventory.forEach(p=>{
+table.innerHTML+=`<tr><td>${p.name}</td><td>${p.qty}</td></tr>`;
+});
+}
+
+function sendPromo(){
+showToast("تم إرسال الحملة التسويقية");
+}
+
+function logout(){
+location.href="login.html";
+}
+
+document.getElementById("userRole").innerText="الصلاحية: "+userRole;
 </script>
 
 </body>
