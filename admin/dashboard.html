@@ -12,8 +12,6 @@ body{
     color:#EFEFEF;
     display:flex;
 }
-
-/* Sidebar */
 .sidebar{
     width:250px;
     background:#111;
@@ -21,12 +19,10 @@ body{
     padding:20px;
     box-shadow:0 0 20px rgba(181,60,184,0.3);
 }
-
 .sidebar h2{
     text-align:center;
     margin-bottom:30px;
 }
-
 .sidebar button{
     width:100%;
     margin-bottom:10px;
@@ -37,25 +33,19 @@ body{
     border-radius:8px;
     cursor:pointer;
 }
-
 .sidebar button:hover{
     background:#B53CB8;
 }
-
-/* Content */
 .content{
     flex:1;
     padding:30px;
 }
-
 .section{
     display:none;
 }
-
 .section.active{
     display:block;
 }
-
 .card{
     background:#111;
     padding:15px;
@@ -63,7 +53,6 @@ body{
     margin-bottom:15px;
     box-shadow:0 0 15px rgba(181,60,184,0.2);
 }
-
 button.action{
     background:#B53CB8;
     border:none;
@@ -71,11 +60,18 @@ button.action{
     border-radius:6px;
     color:white;
     cursor:pointer;
+    margin-right:5px;
 }
-
 .logout{
     margin-top:30px;
     background:#444 !important;
+}
+input, textarea{
+    width:100%;
+    padding:8px;
+    margin:5px 0;
+    border:none;
+    border-radius:6px;
 }
 </style>
 </head>
@@ -84,7 +80,6 @@ button.action{
 
 <div class="sidebar">
 <h2>Baron 👑</h2>
-
 <button onclick="showSection('dashboard')">🏠 الرئيسية</button>
 <button onclick="showSection('products')">📦 المنتجات</button>
 <button onclick="showSection('orders')">🛒 الطلبات</button>
@@ -93,30 +88,27 @@ button.action{
 
 <div class="content">
 
-<!-- Dashboard -->
 <div id="dashboard" class="section active">
-<h1>مرحبًا بك في لوحة التحكم 👑</h1>
-<p>نظام إدارة Baron Electronics</p>
+<h1>مرحبًا بك 👑</h1>
+<p>لوحة إدارة Baron Electronics</p>
 </div>
 
-<!-- Products -->
 <div id="products" class="section">
 <h1>إدارة المنتجات</h1>
 
-<input type="text" id="productName" placeholder="اسم المنتج"><br><br>
-<input type="number" id="productPrice" placeholder="السعر"><br><br>
-<input type="text" id="productCategory" placeholder="الفئة"><br><br>
-<input type="text" id="productColor" placeholder="اللون"><br><br>
-<textarea id="productDescription" placeholder="الوصف"></textarea><br><br>
-<input type="text" id="productImage" placeholder="رابط الصورة"><br><br>
+<input type="text" id="productName" placeholder="اسم المنتج">
+<input type="number" id="productPrice" placeholder="السعر">
+<input type="text" id="productCategory" placeholder="الفئة">
+<input type="text" id="productColor" placeholder="اللون">
+<textarea id="productDescription" placeholder="الوصف"></textarea>
+<input type="text" id="productImage" placeholder="رابط الصورة">
 
-<button class="action" onclick="addProduct()">إضافة المنتج</button>
+<button class="action" onclick="addOrUpdateProduct()">حفظ المنتج</button>
 
 <h3 style="margin-top:30px;">قائمة المنتجات</h3>
 <div id="productList"></div>
 </div>
 
-<!-- Orders -->
 <div id="orders" class="section">
 <h1>إدارة الطلبات</h1>
 <div id="ordersContainer"></div>
@@ -130,21 +122,20 @@ import { auth, db } from "../firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* حماية */
-onAuthStateChanged(auth, (user)=>{
+let editingId = null;
+
+onAuthStateChanged(auth,(user)=>{
     if(!user){
         window.location.href="login.html";
     }
 });
 
-/* تسجيل خروج */
-document.getElementById("logoutBtn").addEventListener("click", ()=>{
+document.getElementById("logoutBtn").addEventListener("click",()=>{
     signOut(auth).then(()=>{
         window.location.href="login.html";
     });
 });
 
-/* تنقل */
 window.showSection = function(id){
     document.querySelectorAll(".section").forEach(sec=>{
         sec.classList.remove("active");
@@ -152,8 +143,7 @@ window.showSection = function(id){
     document.getElementById(id).classList.add("active");
 };
 
-/* إضافة منتج */
-window.addProduct = async function(){
+window.addOrUpdateProduct = async function(){
 
     const name = productName.value;
     const price = Number(productPrice.value);
@@ -162,16 +152,33 @@ window.addProduct = async function(){
     const description = productDescription.value;
     const image = productImage.value;
 
-    await addDoc(collection(db,"products"),{
-        name,price,category,color,description,image,
-        createdAt:new Date()
-    });
+    if(editingId){
+        await updateDoc(doc(db,"products",editingId),{
+            name,price,category,color,description,image
+        });
+        editingId = null;
+        alert("تم تحديث المنتج 👑");
+    }else{
+        await addDoc(collection(db,"products"),{
+            name,price,category,color,description,image,
+            createdAt:new Date()
+        });
+        alert("تمت إضافة المنتج 👑");
+    }
 
-    alert("تمت الإضافة 👑");
+    clearForm();
     loadProducts();
 };
 
-/* عرض المنتجات */
+function clearForm(){
+    productName.value="";
+    productPrice.value="";
+    productCategory.value="";
+    productColor.value="";
+    productDescription.value="";
+    productImage.value="";
+}
+
 async function loadProducts(){
     const snapshot = await getDocs(collection(db,"products"));
     productList.innerHTML="";
@@ -179,14 +186,32 @@ async function loadProducts(){
         const p = docSnap.data();
         productList.innerHTML+=`
             <div class="card">
-                ${p.name} - ${p.price} د.ل
+                <strong>${p.name}</strong> - ${p.price} د.ل
+                <br>
+                <button class="action" onclick="editProduct('${docSnap.id}','${p.name}','${p.price}','${p.category}','${p.color}','${p.description}','${p.image}')">تعديل</button>
+                <button class="action" onclick="deleteProduct('${docSnap.id}')">حذف</button>
             </div>
         `;
     });
 }
-loadProducts();
 
-/* عرض الطلبات */
+window.deleteProduct = async function(id){
+    if(confirm("هل أنت متأكد من الحذف؟")){
+        await deleteDoc(doc(db,"products",id));
+        loadProducts();
+    }
+};
+
+window.editProduct = function(id,name,price,category,color,description,image){
+    editingId = id;
+    productName.value=name;
+    productPrice.value=price;
+    productCategory.value=category;
+    productColor.value=color;
+    productDescription.value=description;
+    productImage.value=image;
+};
+
 async function loadOrders(){
     const snapshot = await getDocs(collection(db,"orders"));
     ordersContainer.innerHTML="";
@@ -199,6 +224,8 @@ async function loadOrders(){
         `;
     });
 }
+
+loadProducts();
 loadOrders();
 
 </script>
