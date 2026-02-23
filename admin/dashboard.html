@@ -73,6 +73,17 @@ input, textarea{
     border:none;
     border-radius:6px;
 }
+.stat-box{
+    background:#111;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:20px;
+    box-shadow:0 0 20px rgba(181,60,184,0.3);
+}
+.stat-number{
+    font-size:28px;
+    color:#B53CB8;
+}
 </style>
 </head>
 
@@ -80,7 +91,7 @@ input, textarea{
 
 <div class="sidebar">
 <h2>Baron 👑</h2>
-<button onclick="showSection('dashboard')">🏠 الرئيسية</button>
+<button onclick="showSection('dashboard')">📊 التحليلات</button>
 <button onclick="showSection('products')">📦 المنتجات</button>
 <button onclick="showSection('orders')">🛒 الطلبات</button>
 <button id="logoutBtn" class="logout">🚪 تسجيل خروج</button>
@@ -88,16 +99,34 @@ input, textarea{
 
 <div class="content">
 
+<!-- Analytics -->
 <div id="dashboard" class="section active">
-<h1>مرحبًا بك 👑</h1>
-<p>لوحة إدارة Baron Electronics</p>
+<h1>تحليلات المتجر</h1>
+
+<div class="stat-box">
+عدد المنتجات
+<div class="stat-number" id="totalProducts">0</div>
 </div>
 
+<div class="stat-box">
+عدد الطلبات
+<div class="stat-number" id="totalOrders">0</div>
+</div>
+
+<div class="stat-box">
+إجمالي المبيعات
+<div class="stat-number" id="totalSales">0</div>
+</div>
+
+</div>
+
+<!-- Products -->
 <div id="products" class="section">
 <h1>إدارة المنتجات</h1>
 
 <input type="text" id="productName" placeholder="اسم المنتج">
 <input type="number" id="productPrice" placeholder="السعر">
+<input type="number" id="productStock" placeholder="الكمية">
 <input type="text" id="productCategory" placeholder="الفئة">
 <input type="text" id="productColor" placeholder="اللون">
 <textarea id="productDescription" placeholder="الوصف"></textarea>
@@ -109,6 +138,7 @@ input, textarea{
 <div id="productList"></div>
 </div>
 
+<!-- Orders -->
 <div id="orders" class="section">
 <h1>إدارة الطلبات</h1>
 <div id="ordersContainer"></div>
@@ -143,10 +173,12 @@ window.showSection = function(id){
     document.getElementById(id).classList.add("active");
 };
 
+/* إضافة أو تعديل منتج */
 window.addOrUpdateProduct = async function(){
 
     const name = productName.value;
     const price = Number(productPrice.value);
+    const stock = Number(productStock.value);
     const category = productCategory.value;
     const color = productColor.value;
     const description = productDescription.value;
@@ -154,13 +186,13 @@ window.addOrUpdateProduct = async function(){
 
     if(editingId){
         await updateDoc(doc(db,"products",editingId),{
-            name,price,category,color,description,image
+            name,price,stock,category,color,description,image
         });
         editingId = null;
         alert("تم تحديث المنتج 👑");
     }else{
         await addDoc(collection(db,"products"),{
-            name,price,category,color,description,image,
+            name,price,stock,category,color,description,image,
             createdAt:new Date()
         });
         alert("تمت إضافة المنتج 👑");
@@ -168,17 +200,20 @@ window.addOrUpdateProduct = async function(){
 
     clearForm();
     loadProducts();
+    loadAnalytics();
 };
 
 function clearForm(){
     productName.value="";
     productPrice.value="";
+    productStock.value="";
     productCategory.value="";
     productColor.value="";
     productDescription.value="";
     productImage.value="";
 }
 
+/* عرض المنتجات */
 async function loadProducts(){
     const snapshot = await getDocs(collection(db,"products"));
     productList.innerHTML="";
@@ -187,8 +222,9 @@ async function loadProducts(){
         productList.innerHTML+=`
             <div class="card">
                 <strong>${p.name}</strong> - ${p.price} د.ل
+                <br>الكمية: ${p.stock}
                 <br>
-                <button class="action" onclick="editProduct('${docSnap.id}','${p.name}','${p.price}','${p.category}','${p.color}','${p.description}','${p.image}')">تعديل</button>
+                <button class="action" onclick="editProduct('${docSnap.id}','${p.name}','${p.price}','${p.stock}','${p.category}','${p.color}','${p.description}','${p.image}')">تعديل</button>
                 <button class="action" onclick="deleteProduct('${docSnap.id}')">حذف</button>
             </div>
         `;
@@ -199,19 +235,22 @@ window.deleteProduct = async function(id){
     if(confirm("هل أنت متأكد من الحذف؟")){
         await deleteDoc(doc(db,"products",id));
         loadProducts();
+        loadAnalytics();
     }
 };
 
-window.editProduct = function(id,name,price,category,color,description,image){
+window.editProduct = function(id,name,price,stock,category,color,description,image){
     editingId = id;
     productName.value=name;
     productPrice.value=price;
+    productStock.value=stock;
     productCategory.value=category;
     productColor.value=color;
     productDescription.value=description;
     productImage.value=image;
 };
 
+/* عرض الطلبات */
 async function loadOrders(){
     const snapshot = await getDocs(collection(db,"orders"));
     ordersContainer.innerHTML="";
@@ -225,8 +264,26 @@ async function loadOrders(){
     });
 }
 
+/* التحليلات */
+async function loadAnalytics(){
+
+    const productsSnap = await getDocs(collection(db,"products"));
+    const ordersSnap = await getDocs(collection(db,"orders"));
+
+    document.getElementById("totalProducts").innerText = productsSnap.size;
+    document.getElementById("totalOrders").innerText = ordersSnap.size;
+
+    let totalSales = 0;
+    ordersSnap.forEach(doc=>{
+        totalSales += doc.data().total;
+    });
+
+    document.getElementById("totalSales").innerText = totalSales + " د.ل";
+}
+
 loadProducts();
 loadOrders();
+loadAnalytics();
 
 </script>
 
