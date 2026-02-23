@@ -45,10 +45,6 @@ right:0;
 top:0;
 }
 
-.sidebar h2{
-margin-bottom:20px;
-}
-
 .sidebar button{
 width:100%;
 padding:12px;
@@ -65,7 +61,6 @@ font-weight:600;
 background:rgba(79,70,229,0.1);
 }
 
-/* Topbar */
 .topbar{
 position:fixed;
 right:260px;
@@ -77,10 +72,8 @@ align-items:center;
 justify-content:space-between;
 padding:0 20px;
 box-shadow:var(--shadow);
-z-index:100;
 }
 
-/* Content */
 .content{
 margin-top:70px;
 margin-right:260px;
@@ -108,11 +101,22 @@ border-radius:8px;
 cursor:pointer;
 }
 
-input{
+input,select,textarea{
 padding:8px;
 border-radius:8px;
 border:1px solid #ccc;
 margin:5px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+padding:8px;
+border-bottom:1px solid #ddd;
+text-align:center;
 }
 
 .toast{
@@ -125,10 +129,6 @@ padding:15px 20px;
 border-radius:10px;
 display:none;
 }
-
-.toggle{cursor:pointer;}
-table{width:100%;border-collapse:collapse;}
-th,td{padding:8px;border-bottom:1px solid #ddd;text-align:center;}
 </style>
 </head>
 
@@ -140,6 +140,10 @@ th,td{padding:8px;border-bottom:1px solid #ddd;text-align:center;}
 <button onclick="showSection('dashboard')">🏠 الرئيسية</button>
 <button onclick="showSection('pos')">🛒 POS</button>
 <button onclick="showSection('inventory')">📦 المخزون</button>
+<button onclick="showSection('suppliers')" id="suppliersBtn">🏢 الموردين</button>
+<button onclick="showSection('invoices')">🧾 الفواتير</button>
+<button onclick="showSection('debts')">💰 الديون</button>
+<button onclick="showSection('maintenance')">🛠 الصيانة</button>
 <button onclick="showSection('analytics')">📊 التحليلات</button>
 <button onclick="showSection('marketing')" id="marketingBtn">🎯 التسويق</button>
 
@@ -149,9 +153,7 @@ th,td{padding:8px;border-bottom:1px solid #ddd;text-align:center;}
 
 <div class="topbar">
 <div id="userRole"></div>
-<div>
-<span class="toggle" onclick="toggleMode()">🌙 / ☀️</span>
-</div>
+<div onclick="toggleMode()" style="cursor:pointer">🌙 / ☀️</div>
 </div>
 
 <div class="content">
@@ -159,26 +161,17 @@ th,td{padding:8px;border-bottom:1px solid #ddd;text-align:center;}
 <!-- Dashboard -->
 <div id="dashboard" class="section active">
 <h2>لوحة التحكم</h2>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-top:20px;">
 <div class="card">
-<h3>المبيعات اليوم</h3>
-<h2 id="todaySales">0 د.ل</h2>
-</div>
-<div class="card">
-<h3>عدد المنتجات</h3>
-<h2 id="totalProducts">0</h2>
-</div>
-<div class="card">
-<h3>عدد العمليات</h3>
-<h2 id="totalOrders">0</h2>
-</div>
+<h3>إجمالي المبيعات: <span id="totalSales">0</span> د.ل</h3>
+<h3>عدد الفواتير: <span id="invoiceCount">0</span></h3>
+<h3>عدد الديون: <span id="debtCount">0</span></h3>
+<h3>أجهزة قيد الصيانة: <span id="maintenanceCount">0</span></h3>
 </div>
 </div>
 
 <!-- POS -->
 <div id="pos" class="section">
 <h2>نقطة البيع</h2>
-
 <div class="card">
 <input type="text" id="productName" placeholder="اسم المنتج">
 <input type="number" id="productPrice" placeholder="السعر">
@@ -186,7 +179,6 @@ th,td{padding:8px;border-bottom:1px solid #ddd;text-align:center;}
 </div>
 
 <div class="card">
-<h3>السلة</h3>
 <ul id="cartList"></ul>
 <h3 id="cartTotal">المجموع: 0 د.ل</h3>
 <button class="action" onclick="completeSale()">إتمام البيع</button>
@@ -196,19 +188,77 @@ th,td{padding:8px;border-bottom:1px solid #ddd;text-align:center;}
 <!-- Inventory -->
 <div id="inventory" class="section">
 <h2>المخزون</h2>
-
 <div class="card">
 <input type="text" id="invName" placeholder="اسم المنتج">
 <input type="number" id="invQty" placeholder="الكمية">
 <button class="action" onclick="addProduct()">إضافة</button>
 </div>
-
 <div class="card">
 <table>
-<thead>
-<tr><th>المنتج</th><th>الكمية</th></tr>
-</thead>
+<thead><tr><th>المنتج</th><th>الكمية</th></tr></thead>
 <tbody id="inventoryTable"></tbody>
+</table>
+</div>
+</div>
+
+<!-- Suppliers -->
+<div id="suppliers" class="section">
+<h2>الموردين</h2>
+<div class="card">
+<input type="text" id="supplierName" placeholder="اسم المورد">
+<input type="text" id="supplierPhone" placeholder="الهاتف">
+<button class="action" onclick="addSupplier()">إضافة</button>
+</div>
+<div class="card">
+<table>
+<thead><tr><th>الاسم</th><th>الهاتف</th></tr></thead>
+<tbody id="supplierTable"></tbody>
+</table>
+</div>
+</div>
+
+<!-- Invoices -->
+<div id="invoices" class="section">
+<h2>الفواتير</h2>
+<div class="card">
+<table>
+<thead><tr><th>الرقم</th><th>القيمة</th></tr></thead>
+<tbody id="invoiceTable"></tbody>
+</table>
+</div>
+</div>
+
+<!-- Debts -->
+<div id="debts" class="section">
+<h2>الديون</h2>
+<div class="card">
+<input type="text" id="debtName" placeholder="اسم العميل">
+<input type="number" id="debtAmount" placeholder="المبلغ">
+<button class="action" onclick="addDebt()">إضافة</button>
+</div>
+<div class="card">
+<table>
+<thead><tr><th>العميل</th><th>المبلغ</th></tr></thead>
+<tbody id="debtTable"></tbody>
+</table>
+</div>
+</div>
+
+<!-- Maintenance -->
+<div id="maintenance" class="section">
+<h2>الصيانة</h2>
+<div class="card">
+<input type="text" id="deviceName" placeholder="اسم الجهاز">
+<select id="deviceStatus">
+<option value="قيد الإصلاح">قيد الإصلاح</option>
+<option value="جاهز">جاهز</option>
+</select>
+<button class="action" onclick="addMaintenance()">إضافة</button>
+</div>
+<div class="card">
+<table>
+<thead><tr><th>الجهاز</th><th>الحالة</th></tr></thead>
+<tbody id="maintenanceTable"></tbody>
 </table>
 </div>
 </div>
@@ -216,15 +266,15 @@ th,td{padding:8px;border-bottom:1px solid #ddd;text-align:center;}
 <!-- Analytics -->
 <div id="analytics" class="section">
 <h2>التحليلات</h2>
-<div class="card">قريبًا سيتم ربطها بـ Firebase + Charts</div>
+<div class="card">قريبًا سيتم إضافة الرسوم البيانية</div>
 </div>
 
 <!-- Marketing -->
 <div id="marketing" class="section">
-<h2>قسم التسويق</h2>
+<h2>التسويق</h2>
 <div class="card">
-<textarea id="promoText" placeholder="اكتب الرسالة التسويقية" style="width:100%;height:100px;"></textarea>
-<button class="action" onclick="sendPromo()">إرسال</button>
+<textarea placeholder="اكتب الحملة..." style="width:100%;height:100px;"></textarea>
+<button class="action" onclick="showToast('تم إرسال الحملة')">إرسال</button>
 </div>
 </div>
 
@@ -233,14 +283,11 @@ th,td{padding:8px;border-bottom:1px solid #ddd;text-align:center;}
 <div id="toast" class="toast"></div>
 
 <script>
-let cart=[];
-let inventory=[];
-let totalSales=0;
-let totalOrders=0;
-let userRole="admin"; // مؤقت حتى نربطه بـ Firebase
+let cart=[],inventory=[],suppliers=[],invoices=[],debts=[],maintenance=[];
+let totalSales=0,userRole="admin";
 
 function showSection(id){
-if(userRole==="staff" && id==="marketing"){
+if(userRole==="staff" && (id==="marketing"||id==="suppliers")){
 showToast("غير مصرح لك بالدخول");
 return;
 }
@@ -252,77 +299,75 @@ function toggleMode(){
 document.body.classList.toggle('dark');
 localStorage.setItem('mode',document.body.classList.contains('dark')?'dark':'light');
 }
-
-if(localStorage.getItem('mode')==='dark'){
-document.body.classList.add('dark');
-}
+if(localStorage.getItem('mode')==='dark'){document.body.classList.add('dark');}
 
 function showToast(msg){
-const toast=document.getElementById('toast');
-toast.innerText=msg;
-toast.style.display='block';
-setTimeout(()=>toast.style.display='none',3000);
+const t=document.getElementById('toast');
+t.innerText=msg;
+t.style.display='block';
+setTimeout(()=>t.style.display='none',3000);
 }
 
 function addToCart(){
-const name=document.getElementById("productName").value;
-const price=parseFloat(document.getElementById("productPrice").value);
-if(!name||!price) return;
-
+const name=productName.value;
+const price=parseFloat(productPrice.value);
+if(!name||!price)return;
 cart.push({name,price});
 renderCart();
 }
 
 function renderCart(){
-const list=document.getElementById("cartList");
-list.innerHTML="";
+cartList.innerHTML="";
 let total=0;
-cart.forEach(item=>{
-total+=item.price;
-list.innerHTML+=`<li>${item.name} - ${item.price} د.ل</li>`;
-});
-document.getElementById("cartTotal").innerText="المجموع: "+total+" د.ل";
+cart.forEach(i=>{total+=i.price;cartList.innerHTML+=`<li>${i.name} - ${i.price}</li>`});
+cartTotal.innerText="المجموع: "+total+" د.ل";
 }
 
 function completeSale(){
-let saleTotal=0;
-cart.forEach(i=>saleTotal+=i.price);
-totalSales+=saleTotal;
-totalOrders++;
-document.getElementById("todaySales").innerText=totalSales+" د.ل";
-document.getElementById("totalOrders").innerText=totalOrders;
-cart=[];
-renderCart();
-showToast("تمت عملية البيع بنجاح");
+let total=0;
+cart.forEach(i=>total+=i.price);
+totalSales+=total;
+invoices.push({id:invoices.length+1,value:total});
+invoiceCount.innerText=invoices.length;
+totalSalesSpan=totalSales;
+document.getElementById("totalSales").innerText=totalSales;
+renderInvoices();
+cart=[];renderCart();
+}
+
+function renderInvoices(){
+invoiceTable.innerHTML="";
+invoices.forEach(i=>invoiceTable.innerHTML+=`<tr><td>${i.id}</td><td>${i.value}</td></tr>`);
 }
 
 function addProduct(){
-const name=document.getElementById("invName").value;
-const qty=document.getElementById("invQty").value;
-if(!name||!qty) return;
-
-inventory.push({name,qty});
+inventory.push({name:invName.value,qty:invQty.value});
 renderInventory();
-document.getElementById("totalProducts").innerText=inventory.length;
-showToast("تم إضافة المنتج");
 }
 
 function renderInventory(){
-const table=document.getElementById("inventoryTable");
-table.innerHTML="";
-inventory.forEach(p=>{
-table.innerHTML+=`<tr><td>${p.name}</td><td>${p.qty}</td></tr>`;
-});
+inventoryTable.innerHTML="";
+inventory.forEach(p=>inventoryTable.innerHTML+=`<tr><td>${p.name}</td><td>${p.qty}</td></tr>`);
 }
 
-function sendPromo(){
-showToast("تم إرسال الحملة التسويقية");
+function addSupplier(){
+suppliers.push({name:supplierName.value,phone:supplierPhone.value});
+supplierTable.innerHTML+=`<tr><td>${supplierName.value}</td><td>${supplierPhone.value}</td></tr>`;
 }
 
-function logout(){
-location.href="login.html";
+function addDebt(){
+debts.push({name:debtName.value,amount:debtAmount.value});
+debtCount.innerText=debts.length;
+debtTable.innerHTML+=`<tr><td>${debtName.value}</td><td>${debtAmount.value}</td></tr>`;
 }
 
+function addMaintenance(){
+maintenance.push({name:deviceName.value,status:deviceStatus.value});
+maintenanceCount.innerText=maintenance.length;
+maintenanceTable.innerHTML+=`<tr><td>${deviceName.value}</td><td>${deviceStatus.value}</td></tr>`;
+}
+
+function logout(){location.href="login.html";}
 document.getElementById("userRole").innerText="الصلاحية: "+userRole;
 </script>
 
