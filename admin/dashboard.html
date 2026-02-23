@@ -2,15 +2,15 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Baron Admin Panel</title>
+<title>Baron ERP System</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body{margin:0;font-family:Arial;background:#0A0A0A;color:#EFEFEF;display:flex}
-.sidebar{width:260px;background:#111;height:100vh;padding:20px;box-shadow:0 0 20px rgba(181,60,184,0.3)}
-.sidebar h2{text-align:center;margin-bottom:30px}
-.sidebar button{width:100%;margin-bottom:10px;padding:10px;background:none;border:1px solid #B53CB8;color:#EFEFEF;border-radius:8px;cursor:pointer}
+.sidebar{width:270px;background:#111;height:100vh;padding:20px;overflow-y:auto;box-shadow:0 0 20px rgba(181,60,184,0.3)}
+.sidebar h2{text-align:center;margin-bottom:20px}
+.sidebar button{width:100%;margin-bottom:8px;padding:10px;background:none;border:1px solid #B53CB8;color:#EFEFEF;border-radius:8px;cursor:pointer}
 .sidebar button:hover{background:#B53CB8}
 .content{flex:1;padding:30px;overflow-y:auto}
 .section{display:none}
@@ -18,165 +18,195 @@ body{margin:0;font-family:Arial;background:#0A0A0A;color:#EFEFEF;display:flex}
 .card{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
 input,select{width:100%;padding:8px;margin-bottom:10px;border-radius:8px;border:1px solid #B53CB8;background:#111;color:#EFEFEF}
 button.action{background:#B53CB8;border:none;padding:8px 12px;color:white;border-radius:8px;margin-top:5px;cursor:pointer}
-.logout{margin-top:30px;background:#444!important}
+.low{border:1px solid red}
+.stat{font-size:20px;margin-bottom:15px}
 </style>
 </head>
-
 <body>
 
 <div class="sidebar">
-<h2>Baron 👑</h2>
-<button onclick="showSection('invoices')">🧾 الفواتير</button>
-<button id="logoutBtn" class="logout">🚪 تسجيل خروج</button>
+<h2>Baron ERP 👑</h2>
+<button onclick="show('analytics')">📊 التحليلات</button>
+<button onclick="show('inventory')">📦 المخزون</button>
+<button onclick="show('orders')">🛒 الطلبات</button>
+<button onclick="show('subscriptions')">💳 الاشتراكات</button>
+<button onclick="show('suppliers')">🏢 الموردين</button>
+<button onclick="show('agents')">👨‍💼 المناديب</button>
+<button onclick="show('invoices')">🧾 فواتير الموردين</button>
 </div>
 
 <div class="content">
 
-<div id="invoices" class="section active">
+<div id="analytics" class="section active">
+<h1>تحليلات عامة</h1>
+<div class="stat">إجمالي المبيعات: <span id="totalSales">0</span></div>
+<canvas id="salesChart"></canvas>
+</div>
 
-<h1>نظام الفواتير والإدارة</h1>
+<div id="inventory" class="section">
+<h1>المخزون</h1>
+<div id="inventoryList"></div>
+</div>
 
-<h3>إضافة مورد</h3>
-<input type="text" id="supplierName" placeholder="اسم المورد">
-<button class="action" onclick="addSupplier()">إضافة مورد</button>
+<div id="orders" class="section">
+<h1>الطلبات</h1>
+<div id="ordersList"></div>
+</div>
+
+<div id="subscriptions" class="section">
+<h1>الاشتراكات</h1>
+<div id="subsList"></div>
+</div>
+
+<div id="suppliers" class="section">
+<h1>الموردين</h1>
+<input id="supplierName" placeholder="اسم المورد">
+<button class="action" onclick="addSupplier()">إضافة</button>
 <div id="supplierList"></div>
+</div>
 
-<hr>
-
-<h3>إضافة مندوب مبيعات</h3>
-<input type="text" id="agentName" placeholder="اسم المندوب">
-<button class="action" onclick="addAgent()">إضافة مندوب</button>
+<div id="agents" class="section">
+<h1>المناديب</h1>
+<input id="agentName" placeholder="اسم المندوب">
+<button class="action" onclick="addAgent()">إضافة</button>
 <div id="agentList"></div>
 
-<hr>
-
-<h3>فاتورة مورد (زيادة مخزون)</h3>
-<select id="supplierSelect"></select>
-<select id="productSelect"></select>
-<input type="number" id="invoiceQty" placeholder="الكمية">
-<input type="number" id="invoiceCost" placeholder="تكلفة الوحدة">
-<button class="action" onclick="createSupplierInvoice()">تسجيل الفاتورة</button>
-
-<hr>
-
-<h3>تسليم بضاعة لمندوب</h3>
+<h3>تسليم بضاعة</h3>
 <select id="agentSelect"></select>
-<select id="agentProductSelect"></select>
+<select id="productSelect"></select>
 <input type="number" id="agentQty" placeholder="الكمية">
 <button class="action" onclick="deliverToAgent()">تسليم</button>
+</div>
 
-<div id="logArea"></div>
-
+<div id="invoices" class="section">
+<h1>فواتير الموردين</h1>
+<select id="supplierSelect"></select>
+<select id="invoiceProduct"></select>
+<input type="number" id="invoiceQty" placeholder="الكمية">
+<button class="action" onclick="addInvoice()">إضافة فاتورة</button>
 </div>
 
 </div>
 
 <script type="module">
 
-import { auth, db } from "../firebase-config.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { collection, addDoc, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { db } from "../firebase-config.js";
+import { collection, getDocs, addDoc, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-onAuthStateChanged(auth,(user)=>{
-    if(!user){window.location.href="login.html";}
+window.show = function(id){
+document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+};
+
+async function loadAll(){
+
+const products=await getDocs(collection(db,"products"));
+const orders=await getDocs(collection(db,"orders"));
+const suppliers=await getDocs(collection(db,"suppliers"));
+const agents=await getDocs(collection(db,"agents"));
+const subs=await getDocs(collection(db,"subscriptions"));
+
+let total=0;
+
+inventoryList.innerHTML="";
+productSelect.innerHTML="";
+invoiceProduct.innerHTML="";
+
+products.forEach(d=>{
+const p=d.data();
+if(p.stock<=5){
+inventoryList.innerHTML+=`<div class="card low">${p.name} - ${p.stock}</div>`;
+}else{
+inventoryList.innerHTML+=`<div class="card">${p.name} - ${p.stock}</div>`;
+}
+productSelect.innerHTML+=`<option value="${d.id}">${p.name}</option>`;
+invoiceProduct.innerHTML+=`<option value="${d.id}">${p.name}</option>`;
 });
 
-document.getElementById("logoutBtn").addEventListener("click",()=>{
-    signOut(auth).then(()=>{window.location.href="login.html";});
+ordersList.innerHTML="";
+orders.forEach(d=>{
+total+=d.data().total;
+ordersList.innerHTML+=`<div class="card">${d.data().customerName} - ${d.data().total}</div>`;
 });
 
-window.showSection = function(id){
-    document.querySelectorAll(".section").forEach(sec=>sec.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
-};
+document.getElementById("totalSales").innerText=total+" د.ل";
 
-async function loadInitialData(){
-    const suppliers=await getDocs(collection(db,"suppliers"));
-    supplierSelect.innerHTML="";
-    supplierList.innerHTML="";
-    suppliers.forEach(doc=>{
-        supplierSelect.innerHTML+=`<option value="${doc.id}">${doc.data().name}</option>`;
-        supplierList.innerHTML+=`<div class="card">${doc.data().name}</div>`;
-    });
+supplierList.innerHTML="";
+supplierSelect.innerHTML="";
+suppliers.forEach(d=>{
+supplierList.innerHTML+=`<div class="card">${d.data().name}</div>`;
+supplierSelect.innerHTML+=`<option value="${d.id}">${d.data().name}</option>`;
+});
 
-    const agents=await getDocs(collection(db,"agents"));
-    agentSelect.innerHTML="";
-    agentList.innerHTML="";
-    agents.forEach(doc=>{
-        agentSelect.innerHTML+=`<option value="${doc.id}">${doc.data().name}</option>`;
-        agentList.innerHTML+=`<div class="card">${doc.data().name}</div>`;
-    });
+agentList.innerHTML="";
+agentSelect.innerHTML="";
+agents.forEach(d=>{
+agentList.innerHTML+=`<div class="card">${d.data().name} - الدين: ${d.data().debt||0}</div>`;
+agentSelect.innerHTML+=`<option value="${d.id}">${d.data().name}</option>`;
+});
 
-    const products=await getDocs(collection(db,"products"));
-    productSelect.innerHTML="";
-    agentProductSelect.innerHTML="";
-    products.forEach(doc=>{
-        productSelect.innerHTML+=`<option value="${doc.id}">${doc.data().name}</option>`;
-        agentProductSelect.innerHTML+=`<option value="${doc.id}">${doc.data().name}</option>`;
-    });
+subsList.innerHTML="";
+subs.forEach(d=>{
+subsList.innerHTML+=`<div class="card">${d.data().name}</div>`;
+});
+
 }
 
-window.addSupplier = async function(){
-    await addDoc(collection(db,"suppliers"),{name:supplierName.value});
-    supplierName.value="";
-    loadInitialData();
+window.addSupplier=async function(){
+await addDoc(collection(db,"suppliers"),{name:supplierName.value});
+supplierName.value="";
+loadAll();
 };
 
-window.addAgent = async function(){
-    await addDoc(collection(db,"agents"),{name:agentName.value,debt:0});
-    agentName.value="";
-    loadInitialData();
+window.addAgent=async function(){
+await addDoc(collection(db,"agents"),{name:agentName.value,debt:0});
+agentName.value="";
+loadAll();
 };
 
-window.createSupplierInvoice = async function(){
-    const productRef=doc(db,"products",productSelect.value);
-    const snap=await getDocs(collection(db,"products"));
-    const productSnap=await (await fetchProduct(productSelect.value));
-    const currentStock=productSnap.stock;
-
-    await updateDoc(productRef,{stock:currentStock + Number(invoiceQty.value)});
-
-    await addDoc(collection(db,"supplierInvoices"),{
-        supplierId:supplierSelect.value,
-        productId:productSelect.value,
-        qty:Number(invoiceQty.value),
-        cost:Number(invoiceCost.value),
-        createdAt:new Date()
-    });
-
-    logArea.innerHTML="<div class='card'>تم تسجيل فاتورة المورد وزيادة المخزون</div>";
+window.addInvoice=async function(){
+const productRef=doc(db,"products",invoiceProduct.value);
+const snap=await getDocs(collection(db,"products"));
+let product;
+snap.forEach(d=>{if(d.id===invoiceProduct.value) product=d.data();});
+await updateDoc(productRef,{stock:product.stock+Number(invoiceQty.value)});
+await addDoc(collection(db,"supplierInvoices"),{
+supplierId:supplierSelect.value,
+productId:invoiceProduct.value,
+qty:Number(invoiceQty.value),
+createdAt:new Date()
+});
+loadAll();
 };
 
-async function fetchProduct(id){
-    const products=await getDocs(collection(db,"products"));
-    for(const doc of products.docs){
-        if(doc.id===id) return doc.data();
-    }
-}
+window.deliverToAgent=async function(){
+const productRef=doc(db,"products",productSelect.value);
+const snap=await getDocs(collection(db,"products"));
+let product;
+snap.forEach(d=>{if(d.id===productSelect.value) product=d.data();});
+if(product.stock<agentQty.value){alert("المخزون غير كاف");return;}
 
-window.deliverToAgent = async function(){
-    const productRef=doc(db,"products",agentProductSelect.value);
-    const productSnap=await fetchProduct(agentProductSelect.value);
-    if(productSnap.stock < agentQty.value){
-        alert("المخزون غير كافٍ");
-        return;
-    }
+await updateDoc(productRef,{stock:product.stock-Number(agentQty.value)});
 
-    await updateDoc(productRef,{stock:productSnap.stock - Number(agentQty.value)});
+const agents=await getDocs(collection(db,"agents"));
+let agentDoc;
+agents.forEach(d=>{if(d.id===agentSelect.value) agentDoc=d;});
+const newDebt=(agentDoc.data().debt||0)+(product.price*Number(agentQty.value));
+await updateDoc(doc(db,"agents",agentSelect.value),{debt:newDebt});
 
-    await addDoc(collection(db,"agentDeliveries"),{
-        agentId:agentSelect.value,
-        productId:agentProductSelect.value,
-        qty:Number(agentQty.value),
-        createdAt:new Date()
-    });
+await addDoc(collection(db,"agentDeliveries"),{
+agentId:agentSelect.value,
+productId:productSelect.value,
+qty:Number(agentQty.value),
+value:product.price*Number(agentQty.value),
+createdAt:new Date()
+});
 
-    logArea.innerHTML="<div class='card'>تم تسليم البضاعة للمندوب</div>";
+loadAll();
 };
 
-loadInitialData();
+loadAll();
 
 </script>
-
 </body>
 </html>
