@@ -4,7 +4,34 @@
 <meta charset="UTF-8">
 <title>Dashboard - Baron</title>
 </head>
+
 <body style="background:#0A0A0A;color:#EFEFEF;font-family:Arial;text-align:center;padding-top:100px;">
-<h1>مرحبًا بك في لوحة تحكم Baron 👑</h1>
+
+<h1>لوحة تحكم Baron 👑</h1>
+<button id="logoutBtn" style="padding:10px 20px;background:#B53CB8;border:none;color:white;border-radius:8px;cursor:pointer;">
+تسجيل خروج
+</button>
+
+<script type="module">
+
+import { auth } from "../firebase-config.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// 🔐 التحقق من حالة تسجيل الدخول
+onAuthStateChanged(auth, (user) => {
+    if (!user) {
+        window.location.href = "login.html";
+    }
+});
+
+// 🚪 تسجيل خروج
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    signOut(auth).then(() => {
+        window.location.href = "login.html";
+    });
+});
+
+</script>
+
 </body>
 </html>
