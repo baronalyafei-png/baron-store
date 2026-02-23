@@ -3,126 +3,54 @@
 <head>
 <meta charset="UTF-8">
 <title>Baron Store</title>
-
 <style>
-body{
-    background:#0A0A0A;
-    color:#EFEFEF;
-    font-family:Arial;
-    margin:0;
-    padding:20px;
-}
-
-h1{
-    text-align:center;
-    margin-bottom:40px;
-}
-
-.products{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-    gap:20px;
-}
-
-.card{
-    background:#111;
-    padding:20px;
-    border-radius:15px;
-    box-shadow:0 0 15px rgba(181,60,184,0.3);
-    transition:0.3s;
-}
-
-.card:hover{
-    transform:translateY(-5px);
-    box-shadow:0 0 25px rgba(181,60,184,0.6);
-}
-
-.card img{
-    width:100%;
-    height:200px;
-    object-fit:cover;
-    border-radius:10px;
-}
-
-.price{
-    color:#B53CB8;
-    font-weight:bold;
-    font-size:18px;
-}
-
-button{
-    margin-top:10px;
-    padding:10px;
-    background:#B53CB8;
-    border:none;
-    color:white;
-    border-radius:8px;
-    cursor:pointer;
-    width:100%;
-}
-
-button:hover{
-    opacity:0.9;
-}
+body{background:#0A0A0A;color:#EFEFEF;font-family:Arial;padding:20px}
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.card{background:#111;padding:20px;border-radius:15px;box-shadow:0 0 15px rgba(181,60,184,0.3)}
+.price{color:#B53CB8;font-weight:bold}
+button{margin-top:10px;padding:10px;background:#B53CB8;border:none;color:white;border-radius:8px;cursor:pointer;width:100%}
 </style>
-
 </head>
-
 <body>
 
 <h1>متجر Baron 👑</h1>
-
 <div class="products" id="productsContainer"></div>
 
 <script type="module">
-
 import { db } from "./firebase-config.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const container = document.getElementById("productsContainer");
 
-// تحميل المنتجات من Firebase
 async function loadProducts(){
-
-    const querySnapshot = await getDocs(collection(db, "products"));
-    
-    querySnapshot.forEach((doc) => {
-
-        const product = doc.data();
+    const snapshot = await getDocs(collection(db,"products"));
+    snapshot.forEach(docSnap=>{
+        const p = docSnap.data();
+        const id = docSnap.id;
 
         container.innerHTML += `
             <div class="card">
-                <img src="${product.image}" alt="">
-                <h3>${product.name}</h3>
-                <p>${product.description}</p>
-                <p>اللون: ${product.color}</p>
-                <p class="price">${product.price} د.ل</p>
-                <button onclick='addToCart(${JSON.stringify(product)})'>
-                    أضف إلى السلة 🛒
+                <h3>${p.name}</h3>
+                <p>${p.description}</p>
+                <p>الكمية المتاحة: ${p.stock}</p>
+                <p class="price">${p.price} د.ل</p>
+                <button onclick="addToCart('${id}','${p.name}',${p.price})">
+                أضف إلى السلة
                 </button>
             </div>
         `;
     });
 }
-
 loadProducts();
-
 </script>
 
 <script>
-
-// منطق السلة
-function addToCart(product){
-
+function addToCart(id,name,price){
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-    cart.push(product);
-
-    localStorage.setItem("cart", JSON.stringify(cart));
-
-    alert("تمت إضافة المنتج إلى السلة 🛒");
+    cart.push({id,name,price});
+    localStorage.setItem("cart",JSON.stringify(cart));
+    alert("تمت الإضافة 🛒");
 }
-
 </script>
 
 </body>
