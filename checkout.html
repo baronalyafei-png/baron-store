@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>إتمام الشراء - Baron</title>
+
+<style>
+body{
+    background:#0A0A0A;
+    color:#EFEFEF;
+    font-family:Arial;
+    margin:0;
+    padding:20px;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.container{
+    max-width:600px;
+    margin:0 auto;
+    background:#111;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 0 20px rgba(181,60,184,0.3);
+}
+
+input, textarea{
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+    border:none;
+    border-radius:8px;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    background:#B53CB8;
+    border:none;
+    color:white;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+}
+
+button:hover{
+    opacity:0.9;
+}
+
+.total{
+    margin-top:20px;
+    font-size:18px;
+    color:#B53CB8;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>إتمام الشراء 💳</h1>
+
+<div class="container">
+
+<input type="text" id="customerName" placeholder="الاسم الكامل">
+<input type="text" id="customerPhone" placeholder="رقم الهاتف">
+<textarea id="customerAddress" placeholder="العنوان"></textarea>
+
+<div class="total" id="totalPrice"></div>
+
+<button onclick="submitOrder()">تأكيد الطلب</button>
+
+</div>
+
+<script type="module">
+
+import { db } from "./firebase-config.js";
+import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+let total = 0;
+cart.forEach(item => total += item.price);
+
+document.getElementById("totalPrice").innerText = "الإجمالي: " + total + " د.ل";
+
+window.submitOrder = async function(){
+
+    const name = document.getElementById("customerName").value;
+    const phone = document.getElementById("customerPhone").value;
+    const address = document.getElementById("customerAddress").value;
+
+    if(!name || !phone || !address){
+        alert("يرجى تعبئة جميع البيانات");
+        return;
+    }
+
+    try{
+        await addDoc(collection(db, "orders"), {
+            customerName: name,
+            customerPhone: phone,
+            customerAddress: address,
+            items: cart,
+            total: total,
+            status: "طلب جديد",
+            createdAt: new Date()
+        });
+
+        alert("تم إرسال الطلب بنجاح 👑");
+
+        localStorage.removeItem("cart");
+
+        window.location.href = "store.html";
+
+    }catch(error){
+        console.error(error);
+        alert("حدث خطأ أثناء إرسال الطلب");
+    }
+
+}
+
+</script>
+
+</body>
+</html>
