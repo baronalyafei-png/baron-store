@@ -20,7 +20,8 @@ body{margin:0;font-family:Arial;background:#0A0A0A;color:#EFEFEF;display:flex}
 .card{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
 .low-stock{border:1px solid red}
 .logout{margin-top:30px;background:#444!important}
-canvas{background:#111;padding:20px;border-radius:12px}
+canvas{background:#111;padding:20px;border-radius:12px;margin-top:20px}
+select{padding:8px;border-radius:8px;background:#111;color:#EFEFEF;border:1px solid #B53CB8}
 </style>
 </head>
 
@@ -36,29 +37,30 @@ canvas{background:#111;padding:20px;border-radius:12px}
 
 <div class="content">
 
-<!-- Dashboard -->
 <div id="dashboard" class="section active">
 <h1>لوحة التحليلات</h1>
+
+<select id="periodFilter" onchange="reloadAnalytics()">
+<option value="7">آخر 7 أيام</option>
+<option value="30">آخر 30 يوم</option>
+<option value="all">كل الوقت</option>
+</select>
 
 <div id="notificationArea"></div>
 
 <div class="stat-box">إجمالي المبيعات: <span id="totalSales">0</span></div>
 
-<h3>المبيعات حسب الأيام</h3>
 <canvas id="salesChart"></canvas>
-
-<h3 style="margin-top:40px;">الطلبات حسب الأيام</h3>
 <canvas id="ordersChart"></canvas>
+<canvas id="stockChart"></canvas>
 
 </div>
 
-<!-- Inventory -->
 <div id="inventory" class="section">
 <h1>إدارة المخزون</h1>
 <div id="inventoryList"></div>
 </div>
 
-<!-- Orders -->
 <div id="orders" class="section">
 <h1>إدارة الطلبات</h1>
 <div id="ordersContainer"></div>
@@ -71,6 +73,8 @@ canvas{background:#111;padding:20px;border-radius:12px}
 import { auth, db } from "../firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+let salesChart, ordersChart, stockChart;
 
 onAuthStateChanged(auth,(user)=>{
     if(!user){window.location.href="login.html";}
@@ -85,80 +89,99 @@ window.showSection = function(id){
     document.getElementById(id).classList.add("active");
 };
 
-async function loadData(){
+window.reloadAnalytics = function(){
+    loadAnalytics();
+};
+
+async function loadAnalytics(){
+
+    const period = document.getElementById("periodFilter").value;
+    const now = new Date();
 
     const productsSnap = await getDocs(collection(db,"products"));
     const ordersSnap = await getDocs(collection(db,"orders"));
 
-    let lowStock=0;
+    let salesData={}, ordersData={};
     let totalSales=0;
-
-    let dailySales = {};
-    let dailyOrders = {};
+    let lowStock=0;
 
     productsSnap.forEach(doc=>{
-        if(doc.data().stock <= 5){lowStock++;}
+        const p = doc.data();
+        if(p.stock <= 5) lowStock++;
     });
 
-    if(lowStock > 0){
-        document.getElementById("notificationArea").innerHTML =
-        `<div class="notification">
-        ⚠ يوجد ${lowStock} منتجات منخفضة المخزون
-        </div>`;
+    if(lowStock>0){
+        document.getElementById("notificationArea").innerHTML=
+        `<div class="notification">⚠ يوجد ${lowStock} منتجات منخفضة المخزون</div>`;
+    } else {
+        document.getElementById("notificationArea").innerHTML="";
     }
 
     ordersSnap.forEach(doc=>{
         const o = doc.data();
-        const date = o.createdAt.toDate().toLocaleDateString();
+        const dateObj = o.createdAt.toDate();
+        const diffDays = (now - dateObj)/(1000*60*60*24);
 
-        totalSales += o.total;
+        if(period==="7" && diffDays>7) return;
+        if(period==="30" && diffDays>30) return;
 
-        dailySales[date] = (dailySales[date] || 0) + o.total;
-        dailyOrders[date] = (dailyOrders[date] || 0) + 1;
+        const date = dateObj.toLocaleDateString();
+        salesData[date]=(salesData[date]||0)+o.total;
+        ordersData[date]=(ordersData[date]||0)+1;
+        totalSales+=o.total;
     });
 
-    document.getElementById("totalSales").innerText = totalSales + " د.ل";
+    document.getElementById("totalSales").innerText=totalSales+" د.ل";
 
-    createChart("salesChart","المبيعات",dailySales);
-    createChart("ordersChart","عدد الطلبات",dailyOrders);
+    createBarChart("salesChart","المبيعات",salesData,"#B53CB8",salesChart,(chart)=>salesChart=chart);
+    createBarChart("ordersChart","عدد الطلبات",ordersData,"#00c2ff",ordersChart,(chart)=>ordersChart=chart);
+
+    // مخزون
+    let stockLabels=[], stockValues=[];
+    productsSnap.forEach(doc=>{
+        stockLabels.push(doc.data().name);
+        stockValues.push(doc.data().stock);
+    });
+
+    createBarChart("stockChart","المخزون",Object.fromEntries(stockLabels.map((l,i)=>[l,stockValues[i]])),"#ff9800",stockChart,(chart)=>stockChart=chart);
 }
 
-function createChart(canvasId,label,dataObj){
+function createBarChart(canvasId,label,dataObj,color,existingChart,setter){
 
-    const labels = Object.keys(dataObj);
-    const values = Object.values(dataObj);
+    if(existingChart) existingChart.destroy();
 
-    new Chart(document.getElementById(canvasId), {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: label,
-                data: values,
-                borderColor: '#B53CB8',
-                backgroundColor: 'rgba(181,60,184,0.2)',
-                tension: 0.4
+    const labels=Object.keys(dataObj);
+    const values=Object.values(dataObj);
+
+    const chart = new Chart(document.getElementById(canvasId),{
+        type:'bar',
+        data:{
+            labels:labels,
+            datasets:[{
+                label:label,
+                data:values,
+                backgroundColor:color
             }]
         },
-        options: {
-            plugins:{
-                legend:{labels:{color:"#EFEFEF"}}
-            },
+        options:{
+            plugins:{legend:{labels:{color:"#EFEFEF"}}},
             scales:{
                 x:{ticks:{color:"#EFEFEF"}},
                 y:{ticks:{color:"#EFEFEF"}}
             }
         }
     });
+
+    setter(chart);
 }
 
 async function loadInventory(){
     const snapshot = await getDocs(collection(db,"products"));
     inventoryList.innerHTML="";
     snapshot.forEach(doc=>{
-        const p = doc.data();
-        const lowClass = p.stock <= 5 ? "low-stock" : "";
-        inventoryList.innerHTML += `
+        const p=doc.data();
+        const lowClass=p.stock<=5?"low-stock":"";
+        inventoryList.innerHTML+=`
             <div class="card ${lowClass}">
                 ${p.name} — الكمية: ${p.stock}
             </div>
@@ -167,10 +190,10 @@ async function loadInventory(){
 }
 
 async function loadOrders(){
-    const snapshot = await getDocs(collection(db,"orders"));
+    const snapshot=await getDocs(collection(db,"orders"));
     ordersContainer.innerHTML="";
     snapshot.forEach(doc=>{
-        const o = doc.data();
+        const o=doc.data();
         ordersContainer.innerHTML+=`
             <div class="card">
                 ${o.customerName} - ${o.total} د.ل - ${o.status}
@@ -179,7 +202,7 @@ async function loadOrders(){
     });
 }
 
-loadData();
+loadAnalytics();
 loadInventory();
 loadOrders();
 
