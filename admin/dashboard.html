@@ -3,45 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <title>Dashboard - Baron</title>
+
 <style>
 body{
     background:#0A0A0A;
     color:#EFEFEF;
     font-family:Arial;
-    text-align:center;
-    padding:40px;
-}
-.container{
-    width:400px;
-    margin:0 auto;
-    text-align:left;
-    background:#111;
+    margin:0;
     padding:20px;
-    border-radius:15px;
-    box-shadow:0 0 20px rgba(181,60,184,0.4);
 }
-input, textarea{
-    width:100%;
-    padding:8px;
-    margin:5px 0;
-    border:none;
-    border-radius:8px;
+
+h1{
+    text-align:center;
 }
+
+.section{
+    margin-top:40px;
+}
+
+.order-card{
+    background:#111;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    box-shadow:0 0 15px rgba(181,60,184,0.3);
+}
+
 button{
-    width:100%;
-    padding:10px;
+    margin-top:10px;
+    padding:6px 10px;
     background:#B53CB8;
     border:none;
     color:white;
-    border-radius:8px;
-    margin-top:10px;
+    border-radius:6px;
     cursor:pointer;
 }
 button:hover{
     opacity:0.9;
 }
+
 .logout{
-    margin-top:30px;
+    margin-top:40px;
     background:#444;
 }
 </style>
@@ -51,17 +53,19 @@ button:hover{
 
 <h1>لوحة تحكم Baron 👑</h1>
 
-<div class="container">
-<h3>إضافة منتج جديد</h3>
+<div class="section">
+<h2>طلبات جديدة</h2>
+<div id="newOrders"></div>
+</div>
 
-<input type="text" id="productName" placeholder="اسم المنتج">
-<input type="number" id="productPrice" placeholder="السعر">
-<input type="text" id="productCategory" placeholder="الفئة">
-<input type="text" id="productColor" placeholder="اللون">
-<textarea id="productDescription" placeholder="الوصف"></textarea>
-<input type="text" id="productImage" placeholder="رابط الصورة">
+<div class="section">
+<h2>قيد التجهيز</h2>
+<div id="processingOrders"></div>
+</div>
 
-<button id="addProductBtn">إضافة المنتج</button>
+<div class="section">
+<h2>تم التسليم</h2>
+<div id="deliveredOrders"></div>
 </div>
 
 <button id="logoutBtn" class="logout">تسجيل خروج</button>
@@ -70,7 +74,7 @@ button:hover{
 
 import { auth, db } from "../firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // حماية الصفحة
 onAuthStateChanged(auth, (user) => {
@@ -86,42 +90,52 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
     });
 });
 
-// إضافة منتج
-document.getElementById("addProductBtn").addEventListener("click", async () => {
+const newDiv = document.getElementById("newOrders");
+const processingDiv = document.getElementById("processingOrders");
+const deliveredDiv = document.getElementById("deliveredOrders");
 
-    const name = document.getElementById("productName").value;
-    const price = document.getElementById("productPrice").value;
-    const category = document.getElementById("productCategory").value;
-    const color = document.getElementById("productColor").value;
-    const description = document.getElementById("productDescription").value;
-    const image = document.getElementById("productImage").value;
+async function loadOrders(){
 
-    try {
-        await addDoc(collection(db, "products"), {
-            name: name,
-            price: Number(price),
-            category: category,
-            color: color,
-            description: description,
-            image: image,
-            createdAt: new Date()
-        });
+    const querySnapshot = await getDocs(collection(db, "orders"));
 
-        alert("تم إضافة المنتج بنجاح 👑");
+    newDiv.innerHTML = "";
+    processingDiv.innerHTML = "";
+    deliveredDiv.innerHTML = "";
 
-        document.getElementById("productName").value = "";
-        document.getElementById("productPrice").value = "";
-        document.getElementById("productCategory").value = "";
-        document.getElementById("productColor").value = "";
-        document.getElementById("productDescription").value = "";
-        document.getElementById("productImage").value = "";
+    querySnapshot.forEach((docSnap) => {
 
-    } catch (error) {
-        console.error(error);
-        alert("حدث خطأ أثناء الإضافة");
-    }
+        const order = docSnap.data();
+        const id = docSnap.id;
 
-});
+        const html = `
+            <div class="order-card">
+                <p><strong>الاسم:</strong> ${order.customerName}</p>
+                <p><strong>الهاتف:</strong> ${order.customerPhone}</p>
+                <p><strong>الإجمالي:</strong> ${order.total} د.ل</p>
+                <p><strong>الحالة:</strong> ${order.status}</p>
+                <button onclick="updateStatus('${id}','قيد التجهيز')">قيد التجهيز</button>
+                <button onclick="updateStatus('${id}','تم التسليم')">تم التسليم</button>
+            </div>
+        `;
+
+        if(order.status === "طلب جديد"){
+            newDiv.innerHTML += html;
+        }else if(order.status === "قيد التجهيز"){
+            processingDiv.innerHTML += html;
+        }else{
+            deliveredDiv.innerHTML += html;
+        }
+
+    });
+}
+
+window.updateStatus = async function(id, status){
+    const orderRef = doc(db, "orders", id);
+    await updateDoc(orderRef, { status: status });
+    loadOrders();
+}
+
+loadOrders();
 
 </script>
 
