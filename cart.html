@@ -1,0 +1,150 @@
+
+واحذف أي شيء بداخله واستبدله بهذا 👇
+
+```html
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>سلة المشتريات - Baron</title>
+
+<style>
+body{
+    background:#0A0A0A;
+    color:#EFEFEF;
+    font-family:Arial;
+    margin:0;
+    padding:20px;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:40px;
+}
+
+.cart-container{
+    max-width:800px;
+    margin:0 auto;
+}
+
+.cart-item{
+    background:#111;
+    padding:20px;
+    border-radius:15px;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    margin-bottom:20px;
+    box-shadow:0 0 15px rgba(181,60,184,0.3);
+}
+
+.cart-item img{
+    width:120px;
+    height:120px;
+    object-fit:cover;
+    border-radius:10px;
+}
+
+.item-info{
+    flex:1;
+}
+
+.price{
+    color:#B53CB8;
+    font-weight:bold;
+}
+
+button{
+    padding:8px 12px;
+    background:#B53CB8;
+    border:none;
+    color:white;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:0.9;
+}
+
+.total{
+    text-align:right;
+    font-size:20px;
+    margin-top:30px;
+}
+
+.checkout-btn{
+    width:100%;
+    margin-top:20px;
+    padding:12px;
+    font-size:16px;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>سلة المشتريات 🛒</h1>
+
+<div class="cart-container" id="cartContainer"></div>
+
+<div class="total" id="totalPrice"></div>
+
+<button class="checkout-btn" onclick="goToCheckout()">
+إتمام الشراء
+</button>
+
+<script>
+
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+const container = document.getElementById("cartContainer");
+const totalDiv = document.getElementById("totalPrice");
+
+function renderCart(){
+
+    container.innerHTML = "";
+    let total = 0;
+
+    if(cart.length === 0){
+        container.innerHTML = "<p>السلة فارغة</p>";
+        totalDiv.innerHTML = "";
+        return;
+    }
+
+    cart.forEach((product, index) => {
+
+        total += product.price;
+
+        container.innerHTML += `
+            <div class="cart-item">
+                <img src="${product.image}" alt="">
+                <div class="item-info">
+                    <h3>${product.name}</h3>
+                    <p>${product.description}</p>
+                    <p class="price">${product.price} د.ل</p>
+                </div>
+                <button onclick="removeItem(${index})">حذف</button>
+            </div>
+        `;
+    });
+
+    totalDiv.innerHTML = "الإجمالي: " + total + " د.ل";
+}
+
+function removeItem(index){
+    cart.splice(index,1);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    renderCart();
+}
+
+function goToCheckout(){
+    window.location.href = "checkout.html";
+}
+
+renderCart();
+
+</script>
+
+</body>
+</html>
