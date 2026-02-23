@@ -2,196 +2,214 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>Baron ERP Pro</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>Baron System</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-body{margin:0;font-family:Arial;background:#0A0A0A;color:#EFEFEF;display:flex}
-.sidebar{width:280px;background:#111;height:100vh;padding:20px;overflow-y:auto}
-.sidebar button{width:100%;margin-bottom:8px;padding:10px;background:none;border:1px solid #B53CB8;color:#EFEFEF;border-radius:8px}
-.sidebar button:hover{background:#B53CB8}
-.content{flex:1;padding:30px;overflow-y:auto}
-.section{display:none}
-.section.active{display:block}
-.card{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
-input{width:100%;padding:8px;margin-bottom:8px;border-radius:8px;background:#111;color:#fff;border:1px solid #B53CB8}
-button.action{background:#B53CB8;border:none;padding:8px 12px;color:white;border-radius:8px;margin-top:5px}
-.low{border:1px solid red}
-.stat{font-size:18px;margin-bottom:10px}
+:root{
+--primary:#4F46E5;
+--danger:#EF4444;
+--success:#22C55E;
+--bg:#F8FAFC;
+--card:#FFFFFF;
+--text:#111827;
+}
+
+body.dark{
+--bg:#0F172A;
+--card:#1E293B;
+--text:#F1F5F9;
+}
+
+body{
+margin:0;
+font-family:'Cairo',sans-serif;
+background:var(--bg);
+color:var(--text);
+display:flex;
+transition:0.3s;
+}
+
+.sidebar{
+width:260px;
+background:var(--card);
+height:100vh;
+padding:20px;
+box-shadow:0 0 20px rgba(0,0,0,0.05);
+overflow-y:auto;
+}
+
+.sidebar h2{
+margin-bottom:20px;
+}
+
+.sidebar button{
+width:100%;
+padding:10px;
+margin-bottom:8px;
+border:none;
+background:none;
+text-align:right;
+cursor:pointer;
+border-radius:8px;
+}
+
+.sidebar button:hover{
+background:rgba(79,70,229,0.1);
+}
+
+.topbar{
+position:fixed;
+right:260px;
+left:0;
+height:60px;
+background:var(--card);
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 20px;
+box-shadow:0 2px 10px rgba(0,0,0,0.05);
+}
+
+.content{
+margin-top:70px;
+margin-right:260px;
+padding:30px;
+width:100%;
+}
+
+.section{
+display:none;
+}
+
+.section.active{
+display:block;
+}
+
+.card{
+background:var(--card);
+padding:20px;
+border-radius:12px;
+margin-bottom:15px;
+box-shadow:0 5px 20px rgba(0,0,0,0.05);
+}
+
+.toast{
+position:fixed;
+bottom:20px;
+left:20px;
+background:var(--primary);
+color:white;
+padding:15px 20px;
+border-radius:10px;
+display:none;
+}
+.toggle{
+cursor:pointer;
+}
 </style>
 </head>
+
 <body>
 
 <div class="sidebar">
-<h2>Baron ERP 👑</h2>
-<button onclick="show('accounts')">💰 الحسابات</button>
-<button onclick="show('suppliers')">🧾 فواتير الموردين</button>
-<button onclick="show('agents')">👨‍💼 المناديب</button>
+<h2>Baron System 👑</h2>
+
+<button onclick="show('dashboard')">🏠 الرئيسية</button>
+<button onclick="show('pos')">🛒 POS</button>
+<button onclick="show('analytics')">📊 التحليلات</button>
+<button onclick="show('suppliers')">🏢 الموردين</button>
+<button onclick="show('agents')">👨‍💼 المندوبين</button>
 <button onclick="show('inventory')">📦 المخزون</button>
+<button onclick="show('invoices')">🧾 الفواتير</button>
+<button onclick="show('debts')">💰 الديون</button>
+<button onclick="show('subscriptions')">💳 الاشتراكات</button>
+<button onclick="show('maintenance')">🛠 الصيانة</button>
+<button onclick="show('marketing')">🎯 التسويق</button>
+<button onclick="show('orders')">📦 الطلبات</button>
+
+<hr>
+<button onclick="logout()">🚪 تسجيل خروج</button>
+</div>
+
+<div class="topbar">
+<div>
+<span id="userRole"></span>
+</div>
+<div>
+<span class="toggle" onclick="toggleMode()">🌙 / ☀️</span>
+</div>
 </div>
 
 <div class="content">
 
-<!-- الحسابات -->
-<div id="accounts" class="section active">
-<h1>النظام المالي</h1>
-<div class="stat">إجمالي المبيعات: <span id="salesTotal">0</span></div>
-<div class="stat">إجمالي تكلفة البضاعة: <span id="costTotal">0</span></div>
-<div class="stat">إجمالي الربح: <span id="profitTotal">0</span></div>
-<div class="stat">ديون المناديب: <span id="agentsDebt">0</span></div>
-<div class="stat">صافي الربح الفعلي: <span id="netProfit">0</span></div>
+<div id="dashboard" class="section active">
+<div class="card">مرحبًا بك في Baron System</div>
 </div>
 
-<!-- فواتير الموردين -->
-<div id="suppliers" class="section">
-<h1>فاتورة مورد يدوية</h1>
-
-<input id="prodName" placeholder="اسم المنتج">
-<input id="prodBarcode" placeholder="باركود أو ID">
-<input id="prodQty" type="number" placeholder="الكمية">
-<input id="prodCost" type="number" placeholder="سعر الشراء">
-<input id="prodPrice" type="number" placeholder="سعر البيع">
-
-<button class="action" onclick="addManualInvoice()">تسجيل الفاتورة</button>
-<div id="invoiceLog"></div>
-</div>
-
-<!-- المناديب -->
-<div id="agents" class="section">
-<h1>المناديب</h1>
-<input id="agentName" placeholder="اسم المندوب">
-<button class="action" onclick="addAgent()">إضافة مندوب</button>
-
-<div id="agentsList"></div>
-
-<h3>سداد دين</h3>
-<input id="payAgentId" placeholder="ID المندوب">
-<input id="payAmount" type="number" placeholder="المبلغ">
-<button class="action" onclick="payAgent()">تسديد</button>
-</div>
-
-<!-- المخزون -->
-<div id="inventory" class="section">
-<h1>المخزون</h1>
-<div id="inventoryList"></div>
-</div>
+<div id="pos" class="section"><div class="card">نقطة البيع (قيد التطوير)</div></div>
+<div id="analytics" class="section"><div class="card">التحليلات</div></div>
+<div id="suppliers" class="section"><div class="card">الموردين</div></div>
+<div id="agents" class="section"><div class="card">المندوبين</div></div>
+<div id="inventory" class="section"><div class="card">المخزون</div></div>
+<div id="invoices" class="section"><div class="card">الفواتير</div></div>
+<div id="debts" class="section"><div class="card">الديون</div></div>
+<div id="subscriptions" class="section"><div class="card">الاشتراكات</div></div>
+<div id="maintenance" class="section"><div class="card">الصيانة</div></div>
+<div id="marketing" class="section"><div class="card">التسويق</div></div>
+<div id="orders" class="section"><div class="card">الطلبات</div></div>
 
 </div>
+
+<div id="toast" class="toast"></div>
 
 <script type="module">
 
-import { db } from "../firebase-config.js";
-import { collection, addDoc, getDocs, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { auth, db } from "../firebase-config.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 window.show = function(id){
-document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-document.getElementById(id).classList.add("active");
-};
-
-async function addManualInvoice(){
-
-const name=prodName.value;
-const barcode=prodBarcode.value;
-const qty=Number(prodQty.value);
-const cost=Number(prodCost.value);
-const price=Number(prodPrice.value);
-
-const products=await getDocs(collection(db,"products"));
-let existing=null;
-
-products.forEach(d=>{
-if(d.data().barcode===barcode) existing=d;
-});
-
-if(existing){
-await updateDoc(doc(db,"products",existing.id),{
-stock:existing.data().stock+qty,
-costPrice:cost,
-price:price
-});
-}else{
-await addDoc(collection(db,"products"),{
-name:name,
-barcode:barcode,
-stock:qty,
-costPrice:cost,
-price:price
-});
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.getElementById(id).classList.add('active');
 }
 
-await addDoc(collection(db,"supplierInvoices"),{
-name,barcode,qty,cost,price,
-createdAt:new Date()
-});
-
-invoiceLog.innerHTML="<div class='card'>تم تسجيل الفاتورة</div>";
-loadAll();
+window.toggleMode = function(){
+document.body.classList.toggle('dark');
+localStorage.setItem('mode',document.body.classList.contains('dark')?'dark':'light');
 }
 
-window.addAgent=async function(){
-await addDoc(collection(db,"agents"),{name:agentName.value,debt:0});
-agentName.value="";
-loadAll();
-};
-
-window.payAgent=async function(){
-const agents=await getDocs(collection(db,"agents"));
-agents.forEach(async d=>{
-if(d.id===payAgentId.value){
-const newDebt=(d.data().debt||0)-Number(payAmount.value);
-await updateDoc(doc(db,"agents",d.id),{debt:newDebt});
-await addDoc(collection(db,"agentPayments"),{
-agentId:d.id,
-amount:Number(payAmount.value),
-createdAt:new Date()
-});
-}
-});
-loadAll();
-};
-
-async function loadAll(){
-
-const orders=await getDocs(collection(db,"orders"));
-const products=await getDocs(collection(db,"products"));
-const agents=await getDocs(collection(db,"agents"));
-
-let sales=0,costTotal=0,profit=0,agentsDebt=0;
-
-orders.forEach(o=>sales+=o.data().total);
-
-products.forEach(p=>{
-costTotal+= (p.data().costPrice||0)*p.data().stock;
-});
-
-orders.forEach(o=>{
-o.data().items.forEach(item=>{
-profit+= (item.price-(item.costPrice||0))*item.qty;
-});
-});
-
-agents.forEach(a=>agentsDebt+=(a.data().debt||0));
-
-document.getElementById("salesTotal").innerText=sales;
-document.getElementById("costTotal").innerText=costTotal;
-document.getElementById("profitTotal").innerText=profit;
-document.getElementById("agentsDebt").innerText=agentsDebt;
-document.getElementById("netProfit").innerText=sales-costTotal;
-
-inventoryList.innerHTML="";
-products.forEach(p=>{
-inventoryList.innerHTML+=`<div class="card">${p.data().name} - ${p.data().stock}</div>`;
-});
-
-agentsList.innerHTML="";
-agents.forEach(a=>{
-agentsList.innerHTML+=`<div class="card">ID:${a.id}<br>${a.data().name}<br>الدين:${a.data().debt||0}</div>`;
-});
-
+if(localStorage.getItem('mode')==='dark'){
+document.body.classList.add('dark');
 }
 
-loadAll();
+window.showToast = function(msg){
+const toast=document.getElementById('toast');
+toast.innerText=msg;
+toast.style.display='block';
+setTimeout(()=>toast.style.display='none',3000);
+}
+
+window.logout = function(){
+signOut(auth).then(()=>location.href="login.html");
+}
+
+onAuthStateChanged(auth, async (user)=>{
+if(!user){location.href="login.html";return;}
+
+const userDoc = await getDoc(doc(db,"users",user.uid));
+if(userDoc.exists()){
+const role=userDoc.data().role;
+document.getElementById("userRole").innerText="الصلاحية: "+role;
+if(role==="staff"){
+// إخفاء بعض الأقسام
+document.querySelector("button[onclick=\"show('marketing')\"]").style.display="none";
+document.querySelector("button[onclick=\"show('suppliers')\"]").style.display="none";
+}
+}
+});
 
 </script>
+
 </body>
 </html>
