@@ -8,21 +8,17 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#0A0A0A;color:#EFEFEF;display:flex}
-.sidebar{width:250px;background:#111;height:100vh;padding:20px;box-shadow:0 0 20px rgba(181,60,184,0.3)}
+.sidebar{width:260px;background:#111;height:100vh;padding:20px;box-shadow:0 0 20px rgba(181,60,184,0.3)}
 .sidebar h2{text-align:center;margin-bottom:30px}
 .sidebar button{width:100%;margin-bottom:10px;padding:10px;background:none;border:1px solid #B53CB8;color:#EFEFEF;border-radius:8px;cursor:pointer}
 .sidebar button:hover{background:#B53CB8}
 .content{flex:1;padding:30px;overflow-y:auto}
 .section{display:none}
 .section.active{display:block}
-.stat-box{background:#111;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 0 20px rgba(181,60,184,0.3)}
-.notification{background:#2a0f0f;border:1px solid red;padding:15px;border-radius:10px;margin-bottom:20px;color:#ff8080}
 .card{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
-.low-stock{border:1px solid red}
-.logout{margin-top:30px;background:#444!important}
-canvas{background:#111;padding:20px;border-radius:12px;margin-top:20px}
-input,select{padding:8px;border-radius:8px;background:#111;color:#EFEFEF;border:1px solid #B53CB8;margin-bottom:10px;width:100%}
+input,select{width:100%;padding:8px;margin-bottom:10px;border-radius:8px;border:1px solid #B53CB8;background:#111;color:#EFEFEF}
 button.action{background:#B53CB8;border:none;padding:8px 12px;color:white;border-radius:8px;margin-top:5px;cursor:pointer}
+.logout{margin-top:30px;background:#444!important}
 </style>
 </head>
 
@@ -30,59 +26,47 @@ button.action{background:#B53CB8;border:none;padding:8px 12px;color:white;border
 
 <div class="sidebar">
 <h2>Baron 👑</h2>
-<button onclick="showSection('dashboard')">📊 التحليلات</button>
-<button onclick="showSection('inventory')">📦 المخزون</button>
-<button onclick="showSection('subscriptions')">💳 الاشتراكات</button>
-<button onclick="showSection('orders')">🛒 الطلبات</button>
+<button onclick="showSection('invoices')">🧾 الفواتير</button>
 <button id="logoutBtn" class="logout">🚪 تسجيل خروج</button>
 </div>
 
 <div class="content">
 
-<!-- Analytics -->
-<div id="dashboard" class="section active">
-<h1>لوحة التحليلات</h1>
+<div id="invoices" class="section active">
 
-<select id="periodFilter" onchange="loadAnalytics()">
-<option value="7">آخر 7 أيام</option>
-<option value="30">آخر 30 يوم</option>
-<option value="all">كل الوقت</option>
-</select>
+<h1>نظام الفواتير والإدارة</h1>
 
-<div id="notificationArea"></div>
+<h3>إضافة مورد</h3>
+<input type="text" id="supplierName" placeholder="اسم المورد">
+<button class="action" onclick="addSupplier()">إضافة مورد</button>
+<div id="supplierList"></div>
 
-<div class="stat-box">إجمالي المبيعات: <span id="totalSales">0</span></div>
+<hr>
 
-<canvas id="salesChart"></canvas>
-<canvas id="ordersChart"></canvas>
-<canvas id="stockChart"></canvas>
-</div>
+<h3>إضافة مندوب مبيعات</h3>
+<input type="text" id="agentName" placeholder="اسم المندوب">
+<button class="action" onclick="addAgent()">إضافة مندوب</button>
+<div id="agentList"></div>
 
-<!-- Inventory -->
-<div id="inventory" class="section">
-<h1>إدارة المخزون</h1>
-<div id="inventoryList"></div>
-</div>
+<hr>
 
-<!-- Subscriptions -->
-<div id="subscriptions" class="section">
-<h1>إدارة الاشتراكات</h1>
+<h3>فاتورة مورد (زيادة مخزون)</h3>
+<select id="supplierSelect"></select>
+<select id="productSelect"></select>
+<input type="number" id="invoiceQty" placeholder="الكمية">
+<input type="number" id="invoiceCost" placeholder="تكلفة الوحدة">
+<button class="action" onclick="createSupplierInvoice()">تسجيل الفاتورة</button>
 
-<input type="text" id="subName" placeholder="اسم الاشتراك">
-<input type="number" id="subPrice" placeholder="السعر">
-<input type="text" id="subDuration" placeholder="المدة">
-<input type="text" id="subType" placeholder="النوع">
+<hr>
 
-<button class="action" onclick="addSubscription()">إضافة اشتراك</button>
+<h3>تسليم بضاعة لمندوب</h3>
+<select id="agentSelect"></select>
+<select id="agentProductSelect"></select>
+<input type="number" id="agentQty" placeholder="الكمية">
+<button class="action" onclick="deliverToAgent()">تسليم</button>
 
-<h3 style="margin-top:20px;">قائمة الاشتراكات</h3>
-<div id="subList"></div>
-</div>
+<div id="logArea"></div>
 
-<!-- Orders -->
-<div id="orders" class="section">
-<h1>إدارة الطلبات</h1>
-<div id="ordersContainer"></div>
 </div>
 
 </div>
@@ -91,9 +75,7 @@ button.action{background:#B53CB8;border:none;padding:8px 12px;color:white;border
 
 import { auth, db } from "../firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-let salesChart, ordersChart, stockChart;
+import { collection, addDoc, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 onAuthStateChanged(auth,(user)=>{
     if(!user){window.location.href="login.html";}
@@ -108,118 +90,91 @@ window.showSection = function(id){
     document.getElementById(id).classList.add("active");
 };
 
-async function loadAnalytics(){
-    const period=document.getElementById("periodFilter").value;
-    const now=new Date();
-    const productsSnap=await getDocs(collection(db,"products"));
-    const ordersSnap=await getDocs(collection(db,"orders"));
-
-    let totalSales=0, salesData={}, ordersData={}, lowStock=0;
-
-    productsSnap.forEach(doc=>{
-        if(doc.data().stock<=5) lowStock++;
+async function loadInitialData(){
+    const suppliers=await getDocs(collection(db,"suppliers"));
+    supplierSelect.innerHTML="";
+    supplierList.innerHTML="";
+    suppliers.forEach(doc=>{
+        supplierSelect.innerHTML+=`<option value="${doc.id}">${doc.data().name}</option>`;
+        supplierList.innerHTML+=`<div class="card">${doc.data().name}</div>`;
     });
 
-    document.getElementById("notificationArea").innerHTML=
-    lowStock>0?`<div class="notification">⚠ يوجد ${lowStock} منتجات منخفضة المخزون</div>`:"";
-
-    ordersSnap.forEach(doc=>{
-        const o=doc.data();
-        const dateObj=o.createdAt.toDate();
-        const diffDays=(now-dateObj)/(1000*60*60*24);
-
-        if(period==="7"&&diffDays>7)return;
-        if(period==="30"&&diffDays>30)return;
-
-        const date=dateObj.toLocaleDateString();
-        salesData[date]=(salesData[date]||0)+o.total;
-        ordersData[date]=(ordersData[date]||0)+1;
-        totalSales+=o.total;
+    const agents=await getDocs(collection(db,"agents"));
+    agentSelect.innerHTML="";
+    agentList.innerHTML="";
+    agents.forEach(doc=>{
+        agentSelect.innerHTML+=`<option value="${doc.id}">${doc.data().name}</option>`;
+        agentList.innerHTML+=`<div class="card">${doc.data().name}</div>`;
     });
 
-    document.getElementById("totalSales").innerText=totalSales+" د.ل";
-
-    createChart("salesChart","المبيعات",salesData,"#B53CB8",salesChart,c=>salesChart=c);
-    createChart("ordersChart","الطلبات",ordersData,"#00c2ff",ordersChart,c=>ordersChart=c);
-
-    let stockLabels={}, stockValues={};
-    productsSnap.forEach(doc=>{
-        stockLabels[doc.data().name]=doc.data().stock;
-    });
-
-    createChart("stockChart","المخزون",stockLabels,"#ff9800",stockChart,c=>stockChart=c);
-}
-
-function createChart(canvasId,label,dataObj,color,existingChart,setter){
-    if(existingChart) existingChart.destroy();
-    const labels=Object.keys(dataObj);
-    const values=Object.values(dataObj);
-
-    const chart=new Chart(document.getElementById(canvasId),{
-        type:'bar',
-        data:{labels:labels,datasets:[{label:label,data:values,backgroundColor:color}]},
-        options:{
-            plugins:{legend:{labels:{color:"#EFEFEF"}}},
-            scales:{x:{ticks:{color:"#EFEFEF"}},y:{ticks:{color:"#EFEFEF"}}}
-        }
-    });
-    setter(chart);
-}
-
-async function loadInventory(){
-    const snapshot=await getDocs(collection(db,"products"));
-    inventoryList.innerHTML="";
-    snapshot.forEach(doc=>{
-        const p=doc.data();
-        const lowClass=p.stock<=5?"low-stock":"";
-        inventoryList.innerHTML+=`<div class="card ${lowClass}">${p.name} — الكمية: ${p.stock}</div>`;
+    const products=await getDocs(collection(db,"products"));
+    productSelect.innerHTML="";
+    agentProductSelect.innerHTML="";
+    products.forEach(doc=>{
+        productSelect.innerHTML+=`<option value="${doc.id}">${doc.data().name}</option>`;
+        agentProductSelect.innerHTML+=`<option value="${doc.id}">${doc.data().name}</option>`;
     });
 }
 
-async function loadOrders(){
-    const snapshot=await getDocs(collection(db,"orders"));
-    ordersContainer.innerHTML="";
-    snapshot.forEach(doc=>{
-        const o=doc.data();
-        ordersContainer.innerHTML+=`<div class="card">${o.customerName} - ${o.total} د.ل - ${o.status}</div>`;
-    });
-}
-
-window.addSubscription=async function(){
-    const name=subName.value;
-    const price=Number(subPrice.value);
-    const duration=subDuration.value;
-    const type=subType.value;
-
-    if(!name||!price||!duration||!type){alert("أكمل البيانات");return;}
-
-    await addDoc(collection(db,"subscriptions"),{name,price,duration,type,createdAt:new Date()});
-    subName.value="";subPrice.value="";subDuration.value="";subType.value="";
-    loadSubscriptions();
+window.addSupplier = async function(){
+    await addDoc(collection(db,"suppliers"),{name:supplierName.value});
+    supplierName.value="";
+    loadInitialData();
 };
 
-async function loadSubscriptions(){
-    const snapshot=await getDocs(collection(db,"subscriptions"));
-    subList.innerHTML="";
-    snapshot.forEach(docSnap=>{
-        const s=docSnap.data();
-        subList.innerHTML+=`
-        <div class="card">
-        ${s.name} - ${s.price} د.ل - ${s.duration}
-        <button class="action" onclick="deleteSubscription('${docSnap.id}')">حذف</button>
-        </div>`;
-    });
-}
-
-window.deleteSubscription=async function(id){
-    await deleteDoc(doc(db,"subscriptions",id));
-    loadSubscriptions();
+window.addAgent = async function(){
+    await addDoc(collection(db,"agents"),{name:agentName.value,debt:0});
+    agentName.value="";
+    loadInitialData();
 };
 
-loadAnalytics();
-loadInventory();
-loadOrders();
-loadSubscriptions();
+window.createSupplierInvoice = async function(){
+    const productRef=doc(db,"products",productSelect.value);
+    const snap=await getDocs(collection(db,"products"));
+    const productSnap=await (await fetchProduct(productSelect.value));
+    const currentStock=productSnap.stock;
+
+    await updateDoc(productRef,{stock:currentStock + Number(invoiceQty.value)});
+
+    await addDoc(collection(db,"supplierInvoices"),{
+        supplierId:supplierSelect.value,
+        productId:productSelect.value,
+        qty:Number(invoiceQty.value),
+        cost:Number(invoiceCost.value),
+        createdAt:new Date()
+    });
+
+    logArea.innerHTML="<div class='card'>تم تسجيل فاتورة المورد وزيادة المخزون</div>";
+};
+
+async function fetchProduct(id){
+    const products=await getDocs(collection(db,"products"));
+    for(const doc of products.docs){
+        if(doc.id===id) return doc.data();
+    }
+}
+
+window.deliverToAgent = async function(){
+    const productRef=doc(db,"products",agentProductSelect.value);
+    const productSnap=await fetchProduct(agentProductSelect.value);
+    if(productSnap.stock < agentQty.value){
+        alert("المخزون غير كافٍ");
+        return;
+    }
+
+    await updateDoc(productRef,{stock:productSnap.stock - Number(agentQty.value)});
+
+    await addDoc(collection(db,"agentDeliveries"),{
+        agentId:agentSelect.value,
+        productId:agentProductSelect.value,
+        qty:Number(agentQty.value),
+        createdAt:new Date()
+    });
+
+    logArea.innerHTML="<div class='card'>تم تسليم البضاعة للمندوب</div>";
+};
+
+loadInitialData();
 
 </script>
 
