@@ -5,85 +5,19 @@
 <title>Baron Admin Panel</title>
 
 <style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:#0A0A0A;
-    color:#EFEFEF;
-    display:flex;
-}
-.sidebar{
-    width:250px;
-    background:#111;
-    height:100vh;
-    padding:20px;
-    box-shadow:0 0 20px rgba(181,60,184,0.3);
-}
-.sidebar h2{
-    text-align:center;
-    margin-bottom:30px;
-}
-.sidebar button{
-    width:100%;
-    margin-bottom:10px;
-    padding:10px;
-    background:none;
-    border:1px solid #B53CB8;
-    color:#EFEFEF;
-    border-radius:8px;
-    cursor:pointer;
-}
-.sidebar button:hover{
-    background:#B53CB8;
-}
-.content{
-    flex:1;
-    padding:30px;
-}
-.section{
-    display:none;
-}
-.section.active{
-    display:block;
-}
-.card{
-    background:#111;
-    padding:15px;
-    border-radius:10px;
-    margin-bottom:15px;
-    box-shadow:0 0 15px rgba(181,60,184,0.2);
-}
-button.action{
-    background:#B53CB8;
-    border:none;
-    padding:6px 10px;
-    border-radius:6px;
-    color:white;
-    cursor:pointer;
-    margin-right:5px;
-}
-.logout{
-    margin-top:30px;
-    background:#444 !important;
-}
-input, textarea{
-    width:100%;
-    padding:8px;
-    margin:5px 0;
-    border:none;
-    border-radius:6px;
-}
-.stat-box{
-    background:#111;
-    padding:20px;
-    border-radius:12px;
-    margin-bottom:20px;
-    box-shadow:0 0 20px rgba(181,60,184,0.3);
-}
-.stat-number{
-    font-size:28px;
-    color:#B53CB8;
-}
+body{margin:0;font-family:Arial;background:#0A0A0A;color:#EFEFEF;display:flex}
+.sidebar{width:250px;background:#111;height:100vh;padding:20px;box-shadow:0 0 20px rgba(181,60,184,0.3)}
+.sidebar h2{text-align:center;margin-bottom:30px}
+.sidebar button{width:100%;margin-bottom:10px;padding:10px;background:none;border:1px solid #B53CB8;color:#EFEFEF;border-radius:8px;cursor:pointer}
+.sidebar button:hover{background:#B53CB8}
+.content{flex:1;padding:30px}
+.section{display:none}
+.section.active{display:block}
+.card{background:#111;padding:15px;border-radius:10px;margin-bottom:15px;box-shadow:0 0 15px rgba(181,60,184,0.2)}
+.low-stock{border:1px solid red}
+.stat-box{background:#111;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 0 20px rgba(181,60,184,0.3)}
+.stat-number{font-size:28px;color:#B53CB8}
+.logout{margin-top:30px;background:#444!important}
 </style>
 </head>
 
@@ -92,7 +26,7 @@ input, textarea{
 <div class="sidebar">
 <h2>Baron 👑</h2>
 <button onclick="showSection('dashboard')">📊 التحليلات</button>
-<button onclick="showSection('products')">📦 المنتجات</button>
+<button onclick="showSection('inventory')">📦 المخزون</button>
 <button onclick="showSection('orders')">🛒 الطلبات</button>
 <button id="logoutBtn" class="logout">🚪 تسجيل خروج</button>
 </div>
@@ -118,24 +52,17 @@ input, textarea{
 <div class="stat-number" id="totalSales">0</div>
 </div>
 
+<div class="stat-box">
+منتجات منخفضة المخزون
+<div class="stat-number" id="lowStockCount">0</div>
 </div>
 
-<!-- Products -->
-<div id="products" class="section">
-<h1>إدارة المنتجات</h1>
+</div>
 
-<input type="text" id="productName" placeholder="اسم المنتج">
-<input type="number" id="productPrice" placeholder="السعر">
-<input type="number" id="productStock" placeholder="الكمية">
-<input type="text" id="productCategory" placeholder="الفئة">
-<input type="text" id="productColor" placeholder="اللون">
-<textarea id="productDescription" placeholder="الوصف"></textarea>
-<input type="text" id="productImage" placeholder="رابط الصورة">
-
-<button class="action" onclick="addOrUpdateProduct()">حفظ المنتج</button>
-
-<h3 style="margin-top:30px;">قائمة المنتجات</h3>
-<div id="productList"></div>
+<!-- Inventory -->
+<div id="inventory" class="section">
+<h1>إدارة المخزون</h1>
+<div id="inventoryList"></div>
 </div>
 
 <!-- Orders -->
@@ -150,113 +77,65 @@ input, textarea{
 
 import { auth, db } from "../firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-let editingId = null;
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 onAuthStateChanged(auth,(user)=>{
-    if(!user){
-        window.location.href="login.html";
-    }
+    if(!user){window.location.href="login.html";}
 });
 
 document.getElementById("logoutBtn").addEventListener("click",()=>{
-    signOut(auth).then(()=>{
-        window.location.href="login.html";
-    });
+    signOut(auth).then(()=>{window.location.href="login.html";});
 });
 
 window.showSection = function(id){
-    document.querySelectorAll(".section").forEach(sec=>{
-        sec.classList.remove("active");
-    });
+    document.querySelectorAll(".section").forEach(sec=>sec.classList.remove("active"));
     document.getElementById(id).classList.add("active");
 };
 
-/* إضافة أو تعديل منتج */
-window.addOrUpdateProduct = async function(){
+async function loadAnalytics(){
+    const productsSnap = await getDocs(collection(db,"products"));
+    const ordersSnap = await getDocs(collection(db,"orders"));
 
-    const name = productName.value;
-    const price = Number(productPrice.value);
-    const stock = Number(productStock.value);
-    const category = productCategory.value;
-    const color = productColor.value;
-    const description = productDescription.value;
-    const image = productImage.value;
+    document.getElementById("totalProducts").innerText = productsSnap.size;
+    document.getElementById("totalOrders").innerText = ordersSnap.size;
 
-    if(editingId){
-        await updateDoc(doc(db,"products",editingId),{
-            name,price,stock,category,color,description,image
-        });
-        editingId = null;
-        alert("تم تحديث المنتج 👑");
-    }else{
-        await addDoc(collection(db,"products"),{
-            name,price,stock,category,color,description,image,
-            createdAt:new Date()
-        });
-        alert("تمت إضافة المنتج 👑");
-    }
+    let totalSales=0;
+    let lowStock=0;
 
-    clearForm();
-    loadProducts();
-    loadAnalytics();
-};
+    productsSnap.forEach(doc=>{
+        const p=doc.data();
+        if(p.stock <= 5){lowStock++;}
+    });
 
-function clearForm(){
-    productName.value="";
-    productPrice.value="";
-    productStock.value="";
-    productCategory.value="";
-    productColor.value="";
-    productDescription.value="";
-    productImage.value="";
+    ordersSnap.forEach(doc=>{
+        totalSales += doc.data().total;
+    });
+
+    document.getElementById("totalSales").innerText = totalSales + " د.ل";
+    document.getElementById("lowStockCount").innerText = lowStock;
 }
 
-/* عرض المنتجات */
-async function loadProducts(){
+async function loadInventory(){
     const snapshot = await getDocs(collection(db,"products"));
-    productList.innerHTML="";
-    snapshot.forEach(docSnap=>{
-        const p = docSnap.data();
-        productList.innerHTML+=`
-            <div class="card">
-                <strong>${p.name}</strong> - ${p.price} د.ل
-                <br>الكمية: ${p.stock}
-                <br>
-                <button class="action" onclick="editProduct('${docSnap.id}','${p.name}','${p.price}','${p.stock}','${p.category}','${p.color}','${p.description}','${p.image}')">تعديل</button>
-                <button class="action" onclick="deleteProduct('${docSnap.id}')">حذف</button>
+    inventoryList.innerHTML="";
+    snapshot.forEach(doc=>{
+        const p = doc.data();
+        const lowClass = p.stock <= 5 ? "low-stock" : "";
+        inventoryList.innerHTML += `
+            <div class="card ${lowClass}">
+                <strong>${p.name}</strong><br>
+                الكمية المتاحة: ${p.stock}
             </div>
         `;
     });
 }
 
-window.deleteProduct = async function(id){
-    if(confirm("هل أنت متأكد من الحذف؟")){
-        await deleteDoc(doc(db,"products",id));
-        loadProducts();
-        loadAnalytics();
-    }
-};
-
-window.editProduct = function(id,name,price,stock,category,color,description,image){
-    editingId = id;
-    productName.value=name;
-    productPrice.value=price;
-    productStock.value=stock;
-    productCategory.value=category;
-    productColor.value=color;
-    productDescription.value=description;
-    productImage.value=image;
-};
-
-/* عرض الطلبات */
 async function loadOrders(){
     const snapshot = await getDocs(collection(db,"orders"));
     ordersContainer.innerHTML="";
-    snapshot.forEach(docSnap=>{
-        const o = docSnap.data();
-        ordersContainer.innerHTML+=`
+    snapshot.forEach(doc=>{
+        const o = doc.data();
+        ordersContainer.innerHTML += `
             <div class="card">
                 ${o.customerName} - ${o.total} د.ل - ${o.status}
             </div>
@@ -264,26 +143,9 @@ async function loadOrders(){
     });
 }
 
-/* التحليلات */
-async function loadAnalytics(){
-
-    const productsSnap = await getDocs(collection(db,"products"));
-    const ordersSnap = await getDocs(collection(db,"orders"));
-
-    document.getElementById("totalProducts").innerText = productsSnap.size;
-    document.getElementById("totalOrders").innerText = ordersSnap.size;
-
-    let totalSales = 0;
-    ordersSnap.forEach(doc=>{
-        totalSales += doc.data().total;
-    });
-
-    document.getElementById("totalSales").innerText = totalSales + " د.ل";
-}
-
-loadProducts();
-loadOrders();
 loadAnalytics();
+loadInventory();
+loadOrders();
 
 </script>
 
