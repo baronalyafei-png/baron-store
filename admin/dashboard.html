@@ -4,26 +4,23 @@
 <meta charset="UTF-8">
 <title>Baron Admin Panel</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body{margin:0;font-family:Arial;background:#0A0A0A;color:#EFEFEF;display:flex}
 .sidebar{width:250px;background:#111;height:100vh;padding:20px;box-shadow:0 0 20px rgba(181,60,184,0.3)}
 .sidebar h2{text-align:center;margin-bottom:30px}
 .sidebar button{width:100%;margin-bottom:10px;padding:10px;background:none;border:1px solid #B53CB8;color:#EFEFEF;border-radius:8px;cursor:pointer}
 .sidebar button:hover{background:#B53CB8}
-.content{flex:1;padding:30px}
+.content{flex:1;padding:30px;overflow-y:auto}
 .section{display:none}
 .section.active{display:block}
 .stat-box{background:#111;padding:20px;border-radius:12px;margin-bottom:20px;box-shadow:0 0 20px rgba(181,60,184,0.3)}
-.stat-number{font-size:24px;color:#B53CB8}
-.notification{
-background:#2a0f0f;
-border:1px solid red;
-padding:15px;
-border-radius:10px;
-margin-bottom:20px;
-color:#ff8080;
-}
+.notification{background:#2a0f0f;border:1px solid red;padding:15px;border-radius:10px;margin-bottom:20px;color:#ff8080}
+.card{background:#111;padding:15px;border-radius:10px;margin-bottom:15px}
+.low-stock{border:1px solid red}
 .logout{margin-top:30px;background:#444!important}
+canvas{background:#111;padding:20px;border-radius:12px}
 </style>
 </head>
 
@@ -32,39 +29,36 @@ color:#ff8080;
 <div class="sidebar">
 <h2>Baron 👑</h2>
 <button onclick="showSection('dashboard')">📊 التحليلات</button>
+<button onclick="showSection('inventory')">📦 المخزون</button>
 <button onclick="showSection('orders')">🛒 الطلبات</button>
 <button id="logoutBtn" class="logout">🚪 تسجيل خروج</button>
 </div>
 
 <div class="content">
 
+<!-- Dashboard -->
 <div id="dashboard" class="section active">
 <h1>لوحة التحليلات</h1>
 
 <div id="notificationArea"></div>
 
-<div class="stat-box">
-مبيعات اليوم
-<div class="stat-number" id="todaySales">0</div>
-</div>
+<div class="stat-box">إجمالي المبيعات: <span id="totalSales">0</span></div>
 
-<div class="stat-box">
-طلبات اليوم
-<div class="stat-number" id="todayOrders">0</div>
-</div>
+<h3>المبيعات حسب الأيام</h3>
+<canvas id="salesChart"></canvas>
 
-<div class="stat-box">
-مبيعات هذا الشهر
-<div class="stat-number" id="monthSales">0</div>
-</div>
-
-<div class="stat-box">
-إجمالي المبيعات الكلي
-<div class="stat-number" id="totalSales">0</div>
-</div>
+<h3 style="margin-top:40px;">الطلبات حسب الأيام</h3>
+<canvas id="ordersChart"></canvas>
 
 </div>
 
+<!-- Inventory -->
+<div id="inventory" class="section">
+<h1>إدارة المخزون</h1>
+<div id="inventoryList"></div>
+</div>
+
+<!-- Orders -->
 <div id="orders" class="section">
 <h1>إدارة الطلبات</h1>
 <div id="ordersContainer"></div>
@@ -91,12 +85,17 @@ window.showSection = function(id){
     document.getElementById(id).classList.add("active");
 };
 
-async function loadAnalytics(){
+async function loadData(){
 
     const productsSnap = await getDocs(collection(db,"products"));
     const ordersSnap = await getDocs(collection(db,"orders"));
 
     let lowStock=0;
+    let totalSales=0;
+
+    let dailySales = {};
+    let dailyOrders = {};
+
     productsSnap.forEach(doc=>{
         if(doc.data().stock <= 5){lowStock++;}
     });
@@ -108,35 +107,63 @@ async function loadAnalytics(){
         </div>`;
     }
 
-    let totalSales=0;
-    let todaySales=0;
-    let monthSales=0;
-    let todayOrders=0;
-
-    const now = new Date();
-    const today = now.toDateString();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
     ordersSnap.forEach(doc=>{
         const o = doc.data();
-        const orderDate = o.createdAt.toDate();
+        const date = o.createdAt.toDate().toLocaleDateString();
+
         totalSales += o.total;
 
-        if(orderDate.toDateString() === today){
-            todaySales += o.total;
-            todayOrders++;
-        }
-
-        if(orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear){
-            monthSales += o.total;
-        }
+        dailySales[date] = (dailySales[date] || 0) + o.total;
+        dailyOrders[date] = (dailyOrders[date] || 0) + 1;
     });
 
-    document.getElementById("todaySales").innerText = todaySales + " د.ل";
-    document.getElementById("todayOrders").innerText = todayOrders;
-    document.getElementById("monthSales").innerText = monthSales + " د.ل";
     document.getElementById("totalSales").innerText = totalSales + " د.ل";
+
+    createChart("salesChart","المبيعات",dailySales);
+    createChart("ordersChart","عدد الطلبات",dailyOrders);
+}
+
+function createChart(canvasId,label,dataObj){
+
+    const labels = Object.keys(dataObj);
+    const values = Object.values(dataObj);
+
+    new Chart(document.getElementById(canvasId), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: values,
+                borderColor: '#B53CB8',
+                backgroundColor: 'rgba(181,60,184,0.2)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            plugins:{
+                legend:{labels:{color:"#EFEFEF"}}
+            },
+            scales:{
+                x:{ticks:{color:"#EFEFEF"}},
+                y:{ticks:{color:"#EFEFEF"}}
+            }
+        }
+    });
+}
+
+async function loadInventory(){
+    const snapshot = await getDocs(collection(db,"products"));
+    inventoryList.innerHTML="";
+    snapshot.forEach(doc=>{
+        const p = doc.data();
+        const lowClass = p.stock <= 5 ? "low-stock" : "";
+        inventoryList.innerHTML += `
+            <div class="card ${lowClass}">
+                ${p.name} — الكمية: ${p.stock}
+            </div>
+        `;
+    });
 }
 
 async function loadOrders(){
@@ -145,14 +172,15 @@ async function loadOrders(){
     snapshot.forEach(doc=>{
         const o = doc.data();
         ordersContainer.innerHTML+=`
-            <div class="stat-box">
+            <div class="card">
                 ${o.customerName} - ${o.total} د.ل - ${o.status}
             </div>
         `;
     });
 }
 
-loadAnalytics();
+loadData();
+loadInventory();
 loadOrders();
 
 </script>
