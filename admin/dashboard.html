@@ -21,7 +21,8 @@ body{margin:0;font-family:Arial;background:#0A0A0A;color:#EFEFEF;display:flex}
 .low-stock{border:1px solid red}
 .logout{margin-top:30px;background:#444!important}
 canvas{background:#111;padding:20px;border-radius:12px;margin-top:20px}
-select{padding:8px;border-radius:8px;background:#111;color:#EFEFEF;border:1px solid #B53CB8}
+input,select{padding:8px;border-radius:8px;background:#111;color:#EFEFEF;border:1px solid #B53CB8;margin-bottom:10px;width:100%}
+button.action{background:#B53CB8;border:none;padding:8px 12px;color:white;border-radius:8px;margin-top:5px;cursor:pointer}
 </style>
 </head>
 
@@ -31,16 +32,18 @@ select{padding:8px;border-radius:8px;background:#111;color:#EFEFEF;border:1px so
 <h2>Baron 👑</h2>
 <button onclick="showSection('dashboard')">📊 التحليلات</button>
 <button onclick="showSection('inventory')">📦 المخزون</button>
+<button onclick="showSection('subscriptions')">💳 الاشتراكات</button>
 <button onclick="showSection('orders')">🛒 الطلبات</button>
 <button id="logoutBtn" class="logout">🚪 تسجيل خروج</button>
 </div>
 
 <div class="content">
 
+<!-- Analytics -->
 <div id="dashboard" class="section active">
 <h1>لوحة التحليلات</h1>
 
-<select id="periodFilter" onchange="reloadAnalytics()">
+<select id="periodFilter" onchange="loadAnalytics()">
 <option value="7">آخر 7 أيام</option>
 <option value="30">آخر 30 يوم</option>
 <option value="all">كل الوقت</option>
@@ -53,14 +56,30 @@ select{padding:8px;border-radius:8px;background:#111;color:#EFEFEF;border:1px so
 <canvas id="salesChart"></canvas>
 <canvas id="ordersChart"></canvas>
 <canvas id="stockChart"></canvas>
-
 </div>
 
+<!-- Inventory -->
 <div id="inventory" class="section">
 <h1>إدارة المخزون</h1>
 <div id="inventoryList"></div>
 </div>
 
+<!-- Subscriptions -->
+<div id="subscriptions" class="section">
+<h1>إدارة الاشتراكات</h1>
+
+<input type="text" id="subName" placeholder="اسم الاشتراك">
+<input type="number" id="subPrice" placeholder="السعر">
+<input type="text" id="subDuration" placeholder="المدة">
+<input type="text" id="subType" placeholder="النوع">
+
+<button class="action" onclick="addSubscription()">إضافة اشتراك</button>
+
+<h3 style="margin-top:20px;">قائمة الاشتراكات</h3>
+<div id="subList"></div>
+</div>
+
+<!-- Orders -->
 <div id="orders" class="section">
 <h1>إدارة الطلبات</h1>
 <div id="ordersContainer"></div>
@@ -72,7 +91,7 @@ select{padding:8px;border-radius:8px;background:#111;color:#EFEFEF;border:1px so
 
 import { auth, db } from "../firebase-config.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, getDocs, addDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 let salesChart, ordersChart, stockChart;
 
@@ -89,43 +108,30 @@ window.showSection = function(id){
     document.getElementById(id).classList.add("active");
 };
 
-window.reloadAnalytics = function(){
-    loadAnalytics();
-};
-
 async function loadAnalytics(){
+    const period=document.getElementById("periodFilter").value;
+    const now=new Date();
+    const productsSnap=await getDocs(collection(db,"products"));
+    const ordersSnap=await getDocs(collection(db,"orders"));
 
-    const period = document.getElementById("periodFilter").value;
-    const now = new Date();
-
-    const productsSnap = await getDocs(collection(db,"products"));
-    const ordersSnap = await getDocs(collection(db,"orders"));
-
-    let salesData={}, ordersData={};
-    let totalSales=0;
-    let lowStock=0;
+    let totalSales=0, salesData={}, ordersData={}, lowStock=0;
 
     productsSnap.forEach(doc=>{
-        const p = doc.data();
-        if(p.stock <= 5) lowStock++;
+        if(doc.data().stock<=5) lowStock++;
     });
 
-    if(lowStock>0){
-        document.getElementById("notificationArea").innerHTML=
-        `<div class="notification">⚠ يوجد ${lowStock} منتجات منخفضة المخزون</div>`;
-    } else {
-        document.getElementById("notificationArea").innerHTML="";
-    }
+    document.getElementById("notificationArea").innerHTML=
+    lowStock>0?`<div class="notification">⚠ يوجد ${lowStock} منتجات منخفضة المخزون</div>`:"";
 
     ordersSnap.forEach(doc=>{
-        const o = doc.data();
-        const dateObj = o.createdAt.toDate();
-        const diffDays = (now - dateObj)/(1000*60*60*24);
+        const o=doc.data();
+        const dateObj=o.createdAt.toDate();
+        const diffDays=(now-dateObj)/(1000*60*60*24);
 
-        if(period==="7" && diffDays>7) return;
-        if(period==="30" && diffDays>30) return;
+        if(period==="7"&&diffDays>7)return;
+        if(period==="30"&&diffDays>30)return;
 
-        const date = dateObj.toLocaleDateString();
+        const date=dateObj.toLocaleDateString();
         salesData[date]=(salesData[date]||0)+o.total;
         ordersData[date]=(ordersData[date]||0)+1;
         totalSales+=o.total;
@@ -133,59 +139,40 @@ async function loadAnalytics(){
 
     document.getElementById("totalSales").innerText=totalSales+" د.ل";
 
-    createBarChart("salesChart","المبيعات",salesData,"#B53CB8",salesChart,(chart)=>salesChart=chart);
-    createBarChart("ordersChart","عدد الطلبات",ordersData,"#00c2ff",ordersChart,(chart)=>ordersChart=chart);
+    createChart("salesChart","المبيعات",salesData,"#B53CB8",salesChart,c=>salesChart=c);
+    createChart("ordersChart","الطلبات",ordersData,"#00c2ff",ordersChart,c=>ordersChart=c);
 
-    // مخزون
-    let stockLabels=[], stockValues=[];
+    let stockLabels={}, stockValues={};
     productsSnap.forEach(doc=>{
-        stockLabels.push(doc.data().name);
-        stockValues.push(doc.data().stock);
+        stockLabels[doc.data().name]=doc.data().stock;
     });
 
-    createBarChart("stockChart","المخزون",Object.fromEntries(stockLabels.map((l,i)=>[l,stockValues[i]])),"#ff9800",stockChart,(chart)=>stockChart=chart);
+    createChart("stockChart","المخزون",stockLabels,"#ff9800",stockChart,c=>stockChart=c);
 }
 
-function createBarChart(canvasId,label,dataObj,color,existingChart,setter){
-
+function createChart(canvasId,label,dataObj,color,existingChart,setter){
     if(existingChart) existingChart.destroy();
-
     const labels=Object.keys(dataObj);
     const values=Object.values(dataObj);
 
-    const chart = new Chart(document.getElementById(canvasId),{
+    const chart=new Chart(document.getElementById(canvasId),{
         type:'bar',
-        data:{
-            labels:labels,
-            datasets:[{
-                label:label,
-                data:values,
-                backgroundColor:color
-            }]
-        },
+        data:{labels:labels,datasets:[{label:label,data:values,backgroundColor:color}]},
         options:{
             plugins:{legend:{labels:{color:"#EFEFEF"}}},
-            scales:{
-                x:{ticks:{color:"#EFEFEF"}},
-                y:{ticks:{color:"#EFEFEF"}}
-            }
+            scales:{x:{ticks:{color:"#EFEFEF"}},y:{ticks:{color:"#EFEFEF"}}}
         }
     });
-
     setter(chart);
 }
 
 async function loadInventory(){
-    const snapshot = await getDocs(collection(db,"products"));
+    const snapshot=await getDocs(collection(db,"products"));
     inventoryList.innerHTML="";
     snapshot.forEach(doc=>{
         const p=doc.data();
         const lowClass=p.stock<=5?"low-stock":"";
-        inventoryList.innerHTML+=`
-            <div class="card ${lowClass}">
-                ${p.name} — الكمية: ${p.stock}
-            </div>
-        `;
+        inventoryList.innerHTML+=`<div class="card ${lowClass}">${p.name} — الكمية: ${p.stock}</div>`;
     });
 }
 
@@ -194,17 +181,45 @@ async function loadOrders(){
     ordersContainer.innerHTML="";
     snapshot.forEach(doc=>{
         const o=doc.data();
-        ordersContainer.innerHTML+=`
-            <div class="card">
-                ${o.customerName} - ${o.total} د.ل - ${o.status}
-            </div>
-        `;
+        ordersContainer.innerHTML+=`<div class="card">${o.customerName} - ${o.total} د.ل - ${o.status}</div>`;
     });
 }
+
+window.addSubscription=async function(){
+    const name=subName.value;
+    const price=Number(subPrice.value);
+    const duration=subDuration.value;
+    const type=subType.value;
+
+    if(!name||!price||!duration||!type){alert("أكمل البيانات");return;}
+
+    await addDoc(collection(db,"subscriptions"),{name,price,duration,type,createdAt:new Date()});
+    subName.value="";subPrice.value="";subDuration.value="";subType.value="";
+    loadSubscriptions();
+};
+
+async function loadSubscriptions(){
+    const snapshot=await getDocs(collection(db,"subscriptions"));
+    subList.innerHTML="";
+    snapshot.forEach(docSnap=>{
+        const s=docSnap.data();
+        subList.innerHTML+=`
+        <div class="card">
+        ${s.name} - ${s.price} د.ل - ${s.duration}
+        <button class="action" onclick="deleteSubscription('${docSnap.id}')">حذف</button>
+        </div>`;
+    });
+}
+
+window.deleteSubscription=async function(id){
+    await deleteDoc(doc(db,"subscriptions",id));
+    loadSubscriptions();
+};
 
 loadAnalytics();
 loadInventory();
 loadOrders();
+loadSubscriptions();
 
 </script>
 
