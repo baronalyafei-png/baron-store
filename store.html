@@ -9,6 +9,7 @@ body{background:#0A0A0A;color:#EFEFEF;font-family:Arial;padding:20px}
 .card{background:#111;padding:20px;border-radius:15px;box-shadow:0 0 15px rgba(181,60,184,0.3)}
 .price{color:#B53CB8;font-weight:bold}
 button{margin-top:10px;padding:10px;background:#B53CB8;border:none;color:white;border-radius:8px;cursor:pointer;width:100%}
+input{width:60px;margin-top:10px;padding:5px;border-radius:6px;border:none}
 </style>
 </head>
 <body>
@@ -31,10 +32,12 @@ async function loadProducts(){
         container.innerHTML += `
             <div class="card">
                 <h3>${p.name}</h3>
-                <p>${p.description}</p>
-                <p>الكمية المتاحة: ${p.stock}</p>
+                <p>المتوفر: ${p.stock}</p>
                 <p class="price">${p.price} د.ل</p>
-                <button onclick="addToCart('${id}','${p.name}',${p.price})">
+
+                <input type="number" min="1" max="${p.stock}" value="1" id="qty-${id}">
+
+                <button onclick="addToCart('${id}','${p.name}',${p.price},${p.stock})">
                 أضف إلى السلة
                 </button>
             </div>
@@ -45,9 +48,23 @@ loadProducts();
 </script>
 
 <script>
-function addToCart(id,name,price){
+function addToCart(id,name,price,stock){
+    let qty = parseInt(document.getElementById("qty-"+id).value);
+
+    if(qty > stock){
+        alert("الكمية المطلوبة غير متوفرة");
+        return;
+    }
+
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
-    cart.push({id,name,price});
+
+    let existing = cart.find(item=>item.id===id);
+    if(existing){
+        existing.qty += qty;
+    }else{
+        cart.push({id,name,price,qty});
+    }
+
     localStorage.setItem("cart",JSON.stringify(cart));
     alert("تمت الإضافة 🛒");
 }
