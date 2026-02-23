@@ -25,28 +25,28 @@ import { db } from "./firebase-config.js";
 import { collection, addDoc, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
-let total = 0;
-cart.forEach(i=> total+=i.price);
+let total=0;
+cart.forEach(i=> total+=i.price*i.qty);
 document.getElementById("total").innerText="الإجمالي: "+total+" د.ل";
 
 window.submitOrder = async function(){
 
-    const name = customerName.value;
-    const phone = customerPhone.value;
-    const address = customerAddress.value;
+    const name=customerName.value;
+    const phone=customerPhone.value;
+    const address=customerAddress.value;
 
-    if(!name || !phone || !address){
-        alert("أكمل البيانات");
-        return;
-    }
+    if(!name||!phone||!address){alert("أكمل البيانات");return;}
 
-    // خصم الكمية من المخزون
     for(let item of cart){
         const ref = doc(db,"products",item.id);
         const snap = await getDoc(ref);
         if(snap.exists()){
             const currentStock = snap.data().stock;
-            await updateDoc(ref,{stock: currentStock - 1});
+            if(currentStock < item.qty){
+                alert("المخزون غير كافٍ لمنتج "+item.name);
+                return;
+            }
+            await updateDoc(ref,{stock: currentStock - item.qty});
         }
     }
 
