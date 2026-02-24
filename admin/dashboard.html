@@ -3284,81 +3284,79 @@
         // تهيئة الإشعارات
         updateNotifications();
     </script>
-  <script>
-<script>
-<script>
 
 /* =========================================
-   Baron Engine - POS + Inventory + Invoices
+   BARON CORE ENGINE
+   POS + Inventory + Invoices + Debts + Stats
 ========================================= */
 
 let inventory = [
     { id: 1, name: "سماعة بلوتوث", price: 150, stock: 10, image: "https://via.placeholder.com/100" },
     { id: 2, name: "هاتف ذكي", price: 2500, stock: 5, image: "https://via.placeholder.com/100" },
-    { id: 3, name: "كيبورد ميكانيكي", price: 320, stock: 8, image: "https://via.placeholder.com/100" },
-    { id: 4, name: "ماوس احترافي", price: 180, stock: 15, image: "https://via.placeholder.com/100" }
+    { id: 3, name: "كيبورد ميكانيكي", price: 320, stock: 8, image: "https://via.placeholder.com/100" }
 ];
 
 let cart = [];
 let invoices = [];
+let debts = [];
+
 let taxRate = 0.15;
 let selectedPayment = "cash";
 
-/* ================= POS ================= */
+/* ================= PRODUCTS ================= */
 
 function renderProducts(){
-    const grid = document.getElementById("products-grid-pos");
+    const grid=document.getElementById("products-grid-pos");
     if(!grid) return;
     grid.innerHTML="";
 
-    inventory.forEach(product=>{
-        grid.innerHTML += `
+    inventory.forEach(p=>{
+        grid.innerHTML+=`
         <div class="product-item">
-            <img src="${product.image}">
-            <div class="name">${product.name}</div>
-            <div class="price">${product.price} ر.س</div>
-            <div style="font-size:12px;color:${product.stock<=3?'#dc3545':'#6c757d'}">
-                الكمية: ${product.stock}
+            <img src="${p.image}">
+            <div class="name">${p.name}</div>
+            <div class="price">${p.price} ر.س</div>
+            <div style="font-size:12px;color:${p.stock<=3?'#dc3545':'#6c757d'}">
+                الكمية: ${p.stock}
             </div>
-            <button class="add-btn" ${product.stock<=0?'disabled':''}
-                onclick="addToCart(${product.id})">
-                ${product.stock<=0?'نفذ':'إضافة'}
+            <button class="add-btn" ${p.stock<=0?'disabled':''}
+                onclick="addToCart(${p.id})">
+                ${p.stock<=0?'نفذ':'إضافة'}
             </button>
         </div>`;
     });
 }
 
+/* ================= CART ================= */
+
 function addToCart(id){
-    const product = inventory.find(p=>p.id===id);
+    const product=inventory.find(p=>p.id===id);
     if(product.stock<=0) return alert("المنتج غير متوفر");
 
-    const existing = cart.find(i=>i.id===id);
-
+    const existing=cart.find(i=>i.id===id);
     if(existing){
         if(existing.qty>=product.stock) return alert("الكمية غير كافية");
         existing.qty++;
     }else{
         cart.push({...product, qty:1});
     }
-
     renderCart();
 }
 
-function changeQty(id, amount){
-    const item = cart.find(i=>i.id===id);
+function changeQty(id,amount){
+    const item=cart.find(i=>i.id===id);
     if(!item) return;
-    item.qty += amount;
+    item.qty+=amount;
     if(item.qty<=0){
-        cart = cart.filter(i=>i.id!==id);
+        cart=cart.filter(i=>i.id!==id);
     }
     renderCart();
 }
 
 function renderCart(){
-    const list = document.getElementById("cart-items-modern");
+    const list=document.getElementById("cart-items-modern");
     if(!list) return;
     list.innerHTML="";
-
     let subtotal=0;
 
     cart.forEach(item=>{
@@ -3367,18 +3365,8 @@ function renderCart(){
 
         list.innerHTML+=`
         <li class="cart-item-modern">
-            <img src="${item.image}" class="cart-item-img">
-            <div class="cart-item-details">
-                <div class="cart-item-name">${item.name}</div>
-                <div class="cart-item-price">${item.price} ر.س</div>
-            </div>
-            <div class="cart-item-qty">
-                <button class="qty-btn" onclick="changeQty(${item.id}, -1)">-</button>
-                <span>${item.qty}</span>
-                <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
-            </div>
-            <div class="cart-item-total">${total.toFixed(2)} ر.س</div>
-            <i class="fas fa-trash remove-item" onclick="changeQty(${item.id}, -999)"></i>
+            <div>${item.name} × ${item.qty}</div>
+            <div>${total.toFixed(2)} ر.س</div>
         </li>`;
     });
 
@@ -3392,7 +3380,7 @@ function renderCart(){
     calculateChange();
 }
 
-/* ================= الدفع ================= */
+/* ================= PAYMENT ================= */
 
 document.querySelectorAll(".payment-option").forEach(option=>{
     option.addEventListener("click",function(){
@@ -3414,11 +3402,15 @@ function calculateChange(){
 
 document.getElementById("paid-amount")?.addEventListener("input",calculateChange);
 
-/* ================= إتمام البيع ================= */
+/* ================= COMPLETE SALE ================= */
 
 document.getElementById("complete-sale-btn")?.addEventListener("click",()=>{
 
     if(cart.length===0) return alert("السلة فارغة");
+
+    let subtotal=parseFloat(document.getElementById("subtotal").innerText);
+    let tax=parseFloat(document.getElementById("tax").innerText);
+    let total=parseFloat(document.getElementById("total").innerText);
 
     // خصم المخزون
     cart.forEach(item=>{
@@ -3426,34 +3418,45 @@ document.getElementById("complete-sale-btn")?.addEventListener("click",()=>{
         product.stock-=item.qty;
     });
 
-    let subtotal=parseFloat(document.getElementById("subtotal").innerText);
-    let tax=parseFloat(document.getElementById("tax").innerText);
-    let total=parseFloat(document.getElementById("total").innerText);
-
     let invoiceNumber="INV-"+(invoices.length+1).toString().padStart(4,"0");
+
+    let party = selectedPayment==="credit"
+        ? document.getElementById("customer-list").selectedOptions[0].text
+        : "عميل نقدي";
+
+    let status = selectedPayment==="credit"?"معلقة":"مدفوعة";
 
     invoices.push({
         number:invoiceNumber,
-        type:"بيع POS",
-        party:selectedPayment==="credit"
-              ? document.getElementById("customer-list").selectedOptions[0].text
-              : "عميل نقدي",
-        date:new Date().toLocaleDateString(),
-        total:total,
-        status:selectedPayment==="credit"?"معلقة":"مدفوعة"
+        party,
+        total,
+        status,
+        date:new Date().toLocaleDateString()
     });
 
-    renderInvoices();
+    // إنشاء دين إذا آجل
+    if(selectedPayment==="credit"){
+        debts.push({
+            invoice:invoiceNumber,
+            name:party,
+            amount:total,
+            settled:false
+        });
+    }
 
-    alert("تم إنشاء الفاتورة رقم "+invoiceNumber+" ✅");
+    updateStats();
+    renderInvoices();
+    renderDebts();
+    renderProducts();
+
+    alert("تم إنشاء الفاتورة "+invoiceNumber+" ✅");
 
     cart=[];
     document.getElementById("paid-amount").value="";
     renderCart();
-    renderProducts();
 });
 
-/* ================= عرض الفواتير ================= */
+/* ================= INVOICES ================= */
 
 function renderInvoices(){
     const table=document.getElementById("invoices-table-body");
@@ -3464,25 +3467,74 @@ function renderInvoices(){
         table.innerHTML+=`
         <tr>
             <td>${inv.number}</td>
-            <td>${inv.type}</td>
+            <td>بيع POS</td>
             <td>${inv.party}</td>
             <td>${inv.date}</td>
             <td>${inv.total.toFixed(2)} ر.س</td>
-            <td>
-                <span class="status-badge ${
-                    inv.status==="مدفوعة"?"status-paid":"status-pending"
-                }">${inv.status}</span>
-            </td>
+            <td>${inv.status}</td>
             <td>—</td>
         </tr>`;
     });
 }
 
-/* ================= تشغيل أولي ================= */
+/* ================= DEBTS ================= */
+
+function renderDebts(){
+    const grid=document.getElementById("rep-debts-grid");
+    if(!grid) return;
+    grid.innerHTML="";
+
+    debts.forEach((d,index)=>{
+        if(d.settled) return;
+
+        grid.innerHTML+=`
+        <div class="debt-card">
+            <div><strong>${d.name}</strong></div>
+            <div>فاتورة: ${d.invoice}</div>
+            <div>المبلغ: ${d.amount.toFixed(2)} ر.س</div>
+            <button class="btn btn-success btn-sm"
+                onclick="settleDebt(${index})">
+                تسوية
+            </button>
+        </div>`;
+    });
+}
+
+function settleDebt(index){
+    debts[index].settled=true;
+
+    let inv=invoices.find(i=>i.number===debts[index].invoice);
+    if(inv) inv.status="مدفوعة";
+
+    updateStats();
+    renderInvoices();
+    renderDebts();
+}
+
+/* ================= STATS ================= */
+
+function updateStats(){
+
+    let totalDebts = debts
+        .filter(d=>!d.settled)
+        .reduce((sum,d)=>sum+d.amount,0);
+
+    document.getElementById("total-debts").innerText=
+        totalDebts.toFixed(2)+" ر.س";
+
+    document.getElementById("total-rep-debts").innerText=
+        totalDebts.toFixed(2)+" ر.س";
+
+    document.getElementById("total-supplier-debts").innerText="0 ر.س";
+}
+
+/* ================= INIT ================= */
 
 document.addEventListener("DOMContentLoaded",()=>{
     renderProducts();
     renderInvoices();
+    renderDebts();
+    updateStats();
 });
 
 </script>
