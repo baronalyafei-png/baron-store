@@ -3285,26 +3285,28 @@
         updateNotifications();
     </script>
   <script>
+<script>
 
-/* ===============================
-   Baron POS Engine - For Madad UI
-================================ */
+/* ==================================
+   Baron POS + Inventory Integration
+================================== */
 
-let products = [
-    { id: 1, name: "سماعة بلوتوث", price: 150, image: "https://via.placeholder.com/100" },
-    { id: 2, name: "هاتف ذكي", price: 2500, image: "https://via.placeholder.com/100" },
-    { id: 3, name: "كيبورد ميكانيكي", price: 320, image: "https://via.placeholder.com/100" },
-    { id: 4, name: "ماوس احترافي", price: 180, image: "https://via.placeholder.com/100" },
-    { id: 5, name: "لابتوب أعمال", price: 4200, image: "https://via.placeholder.com/100" }
+// مخزون النظام
+let inventory = [
+    { id: 1, name: "سماعة بلوتوث", price: 150, stock: 10, image: "https://via.placeholder.com/100" },
+    { id: 2, name: "هاتف ذكي", price: 2500, stock: 5, image: "https://via.placeholder.com/100" },
+    { id: 3, name: "كيبورد ميكانيكي", price: 320, stock: 8, image: "https://via.placeholder.com/100" },
+    { id: 4, name: "ماوس احترافي", price: 180, stock: 15, image: "https://via.placeholder.com/100" },
+    { id: 5, name: "لابتوب أعمال", price: 4200, stock: 3, image: "https://via.placeholder.com/100" }
 ];
 
 let cart = [];
 let taxRate = 0.15;
 let selectedPayment = "cash";
 
-/* ===============================
-   عرض المنتجات
-================================ */
+/* ==================================
+   عرض المنتجات في POS
+================================== */
 
 function renderProducts() {
     const grid = document.getElementById("products-grid-pos");
@@ -3312,29 +3314,72 @@ function renderProducts() {
 
     grid.innerHTML = "";
 
-    products.forEach(product => {
+    inventory.forEach(product => {
+
+        let disabled = product.stock <= 0 ? "disabled" : "";
+
         grid.innerHTML += `
             <div class="product-item">
                 <img src="${product.image}">
                 <div class="name">${product.name}</div>
                 <div class="price">${product.price} ر.س</div>
-                <button class="add-btn" onclick="addToCart(${product.id})">
-                    إضافة
+                <div style="font-size:12px;color:${product.stock<=3?'#dc3545':'#6c757d'}">
+                    الكمية: ${product.stock}
+                </div>
+                <button class="add-btn" ${disabled}
+                    onclick="addToCart(${product.id})">
+                    ${product.stock<=0?'نفذ':'إضافة'}
                 </button>
             </div>
         `;
     });
 }
 
-/* ===============================
+/* ==================================
+   عرض كروت المخزون
+================================== */
+
+function renderInventoryCards(){
+    const container = document.getElementById("inventory-cards");
+    if(!container) return;
+
+    container.innerHTML = "";
+
+    inventory.forEach(product=>{
+        container.innerHTML += `
+        <div class="product-card">
+            <img src="${product.image}">
+            <div class="product-title">${product.name}</div>
+            <div class="product-price">${product.price} ر.س</div>
+            <div class="product-stock">
+                الكمية: <strong style="color:${product.stock<=3?'#dc3545':'#28a745'}">${product.stock}</strong>
+            </div>
+        </div>
+        `;
+    });
+
+    document.getElementById("total-products").innerText = inventory.length;
+}
+
+/* ==================================
    إدارة السلة
-================================ */
+================================== */
 
 function addToCart(id) {
-    const product = products.find(p => p.id === id);
+    const product = inventory.find(p => p.id === id);
+
+    if(product.stock <= 0){
+        alert("المنتج غير متوفر");
+        return;
+    }
+
     const existing = cart.find(item => item.id === id);
 
     if (existing) {
+        if(existing.qty >= product.stock){
+            alert("الكمية غير كافية في المخزون");
+            return;
+        }
         existing.qty++;
     } else {
         cart.push({ ...product, qty: 1 });
@@ -3361,7 +3406,6 @@ function renderCart() {
     if (!list) return;
 
     list.innerHTML = "";
-
     let subtotal = 0;
 
     cart.forEach(item => {
@@ -3396,17 +3440,38 @@ function renderCart() {
     calculateChange();
 }
 
-/* ===============================
+/* ==================================
+   إتمام البيع + خصم المخزون
+================================== */
+
+document.getElementById("complete-sale-btn")?.addEventListener("click", () => {
+
+    if (cart.length === 0) {
+        alert("السلة فارغة");
+        return;
+    }
+
+    cart.forEach(item=>{
+        const product = inventory.find(p=>p.id===item.id);
+        product.stock -= item.qty;
+    });
+
+    alert("تمت عملية البيع وتم خصم الكمية من المخزون ✅");
+
+    cart = [];
+    document.getElementById("paid-amount").value = "";
+    renderCart();
+    renderProducts();
+    renderInventoryCards();
+});
+
+/* ==================================
    الدفع
-================================ */
+================================== */
 
 function calculateChange() {
-    const paidInput = document.getElementById("paid-amount");
-    if (!paidInput) return;
-
-    let paid = parseFloat(paidInput.value) || 0;
-    let totalText = document.getElementById("total").innerText;
-    let total = parseFloat(totalText);
+    let paid = parseFloat(document.getElementById("paid-amount").value) || 0;
+    let total = parseFloat(document.getElementById("total").innerText);
 
     let change = paid - total;
 
@@ -3416,86 +3481,13 @@ function calculateChange() {
 
 document.getElementById("paid-amount")?.addEventListener("input", calculateChange);
 
-/* ===============================
-   طرق الدفع
-================================ */
-
-document.querySelectorAll(".payment-option").forEach(option => {
-    option.addEventListener("click", function () {
-        document.querySelectorAll(".payment-option").forEach(o => o.classList.remove("active"));
-        this.classList.add("active");
-
-        selectedPayment = this.dataset.payment;
-
-        const customerSelect = document.getElementById("customer-select");
-
-        if (selectedPayment === "credit") {
-            customerSelect.style.display = "block";
-        } else {
-            customerSelect.style.display = "none";
-        }
-    });
-});
-
-/* ===============================
-   أزرار العمليات
-================================ */
-
-document.getElementById("clear-cart-btn")?.addEventListener("click", () => {
-    cart = [];
-    renderCart();
-});
-
-document.getElementById("complete-sale-btn")?.addEventListener("click", () => {
-
-    if (cart.length === 0) {
-        alert("السلة فارغة");
-        return;
-    }
-
-    if (selectedPayment === "credit" && !document.getElementById("customer-list").value) {
-        alert("اختر العميل أو المندوب أولاً");
-        return;
-    }
-
-    alert("تمت عملية البيع بنجاح ✅");
-
-    cart = [];
-    document.getElementById("paid-amount").value = "";
-    renderCart();
-});
-
-/* ===============================
-   البحث عن منتج
-================================ */
-
-document.getElementById("product-search-pos")?.addEventListener("input", function () {
-    const term = this.value.toLowerCase();
-    const filtered = products.filter(p => p.name.toLowerCase().includes(term));
-
-    const grid = document.getElementById("products-grid-pos");
-    grid.innerHTML = "";
-
-    filtered.forEach(product => {
-        grid.innerHTML += `
-            <div class="product-item">
-                <img src="${product.image}">
-                <div class="name">${product.name}</div>
-                <div class="price">${product.price} ر.س</div>
-                <button class="add-btn" onclick="addToCart(${product.id})">
-                    إضافة
-                </button>
-            </div>
-        `;
-    });
-});
-
-/* ===============================
+/* ==================================
    تشغيل أولي
-================================ */
+================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
     renderProducts();
+    renderInventoryCards();
 });
 
 </script>
