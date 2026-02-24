@@ -3286,208 +3286,203 @@
     </script>
   <script>
 <script>
+<script>
 
-/* ==================================
-   Baron POS + Inventory Integration
-================================== */
+/* =========================================
+   Baron Engine - POS + Inventory + Invoices
+========================================= */
 
-// مخزون النظام
 let inventory = [
     { id: 1, name: "سماعة بلوتوث", price: 150, stock: 10, image: "https://via.placeholder.com/100" },
     { id: 2, name: "هاتف ذكي", price: 2500, stock: 5, image: "https://via.placeholder.com/100" },
     { id: 3, name: "كيبورد ميكانيكي", price: 320, stock: 8, image: "https://via.placeholder.com/100" },
-    { id: 4, name: "ماوس احترافي", price: 180, stock: 15, image: "https://via.placeholder.com/100" },
-    { id: 5, name: "لابتوب أعمال", price: 4200, stock: 3, image: "https://via.placeholder.com/100" }
+    { id: 4, name: "ماوس احترافي", price: 180, stock: 15, image: "https://via.placeholder.com/100" }
 ];
 
 let cart = [];
+let invoices = [];
 let taxRate = 0.15;
 let selectedPayment = "cash";
 
-/* ==================================
-   عرض المنتجات في POS
-================================== */
+/* ================= POS ================= */
 
-function renderProducts() {
+function renderProducts(){
     const grid = document.getElementById("products-grid-pos");
-    if (!grid) return;
-
-    grid.innerHTML = "";
-
-    inventory.forEach(product => {
-
-        let disabled = product.stock <= 0 ? "disabled" : "";
-
-        grid.innerHTML += `
-            <div class="product-item">
-                <img src="${product.image}">
-                <div class="name">${product.name}</div>
-                <div class="price">${product.price} ر.س</div>
-                <div style="font-size:12px;color:${product.stock<=3?'#dc3545':'#6c757d'}">
-                    الكمية: ${product.stock}
-                </div>
-                <button class="add-btn" ${disabled}
-                    onclick="addToCart(${product.id})">
-                    ${product.stock<=0?'نفذ':'إضافة'}
-                </button>
-            </div>
-        `;
-    });
-}
-
-/* ==================================
-   عرض كروت المخزون
-================================== */
-
-function renderInventoryCards(){
-    const container = document.getElementById("inventory-cards");
-    if(!container) return;
-
-    container.innerHTML = "";
+    if(!grid) return;
+    grid.innerHTML="";
 
     inventory.forEach(product=>{
-        container.innerHTML += `
-        <div class="product-card">
+        grid.innerHTML += `
+        <div class="product-item">
             <img src="${product.image}">
-            <div class="product-title">${product.name}</div>
-            <div class="product-price">${product.price} ر.س</div>
-            <div class="product-stock">
-                الكمية: <strong style="color:${product.stock<=3?'#dc3545':'#28a745'}">${product.stock}</strong>
+            <div class="name">${product.name}</div>
+            <div class="price">${product.price} ر.س</div>
+            <div style="font-size:12px;color:${product.stock<=3?'#dc3545':'#6c757d'}">
+                الكمية: ${product.stock}
             </div>
-        </div>
-        `;
+            <button class="add-btn" ${product.stock<=0?'disabled':''}
+                onclick="addToCart(${product.id})">
+                ${product.stock<=0?'نفذ':'إضافة'}
+            </button>
+        </div>`;
     });
-
-    document.getElementById("total-products").innerText = inventory.length;
 }
 
-/* ==================================
-   إدارة السلة
-================================== */
+function addToCart(id){
+    const product = inventory.find(p=>p.id===id);
+    if(product.stock<=0) return alert("المنتج غير متوفر");
 
-function addToCart(id) {
-    const product = inventory.find(p => p.id === id);
+    const existing = cart.find(i=>i.id===id);
 
-    if(product.stock <= 0){
-        alert("المنتج غير متوفر");
-        return;
-    }
-
-    const existing = cart.find(item => item.id === id);
-
-    if (existing) {
-        if(existing.qty >= product.stock){
-            alert("الكمية غير كافية في المخزون");
-            return;
-        }
+    if(existing){
+        if(existing.qty>=product.stock) return alert("الكمية غير كافية");
         existing.qty++;
-    } else {
-        cart.push({ ...product, qty: 1 });
+    }else{
+        cart.push({...product, qty:1});
     }
 
     renderCart();
 }
 
-function changeQty(id, amount) {
-    const item = cart.find(i => i.id === id);
-    if (!item) return;
-
+function changeQty(id, amount){
+    const item = cart.find(i=>i.id===id);
+    if(!item) return;
     item.qty += amount;
-
-    if (item.qty <= 0) {
-        cart = cart.filter(i => i.id !== id);
+    if(item.qty<=0){
+        cart = cart.filter(i=>i.id!==id);
     }
-
     renderCart();
 }
 
-function renderCart() {
+function renderCart(){
     const list = document.getElementById("cart-items-modern");
-    if (!list) return;
+    if(!list) return;
+    list.innerHTML="";
 
-    list.innerHTML = "";
-    let subtotal = 0;
+    let subtotal=0;
 
-    cart.forEach(item => {
-        let total = item.price * item.qty;
-        subtotal += total;
+    cart.forEach(item=>{
+        let total=item.price*item.qty;
+        subtotal+=total;
 
-        list.innerHTML += `
-            <li class="cart-item-modern">
-                <img src="${item.image}" class="cart-item-img">
-                <div class="cart-item-details">
-                    <div class="cart-item-name">${item.name}</div>
-                    <div class="cart-item-price">${item.price} ر.س</div>
-                </div>
-                <div class="cart-item-qty">
-                    <button class="qty-btn" onclick="changeQty(${item.id}, -1)">-</button>
-                    <span>${item.qty}</span>
-                    <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
-                </div>
-                <div class="cart-item-total">${total.toFixed(2)} ر.س</div>
-                <i class="fas fa-trash remove-item" onclick="changeQty(${item.id}, -999)"></i>
-            </li>
-        `;
+        list.innerHTML+=`
+        <li class="cart-item-modern">
+            <img src="${item.image}" class="cart-item-img">
+            <div class="cart-item-details">
+                <div class="cart-item-name">${item.name}</div>
+                <div class="cart-item-price">${item.price} ر.س</div>
+            </div>
+            <div class="cart-item-qty">
+                <button class="qty-btn" onclick="changeQty(${item.id}, -1)">-</button>
+                <span>${item.qty}</span>
+                <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+            </div>
+            <div class="cart-item-total">${total.toFixed(2)} ر.س</div>
+            <i class="fas fa-trash remove-item" onclick="changeQty(${item.id}, -999)"></i>
+        </li>`;
     });
 
-    let tax = subtotal * taxRate;
-    let total = subtotal + tax;
+    let tax=subtotal*taxRate;
+    let total=subtotal+tax;
 
-    document.getElementById("subtotal").innerText = subtotal.toFixed(2) + " ر.س";
-    document.getElementById("tax").innerText = tax.toFixed(2) + " ر.س";
-    document.getElementById("total").innerText = total.toFixed(2) + " ر.س";
+    document.getElementById("subtotal").innerText=subtotal.toFixed(2)+" ر.س";
+    document.getElementById("tax").innerText=tax.toFixed(2)+" ر.س";
+    document.getElementById("total").innerText=total.toFixed(2)+" ر.س";
 
     calculateChange();
 }
 
-/* ==================================
-   إتمام البيع + خصم المخزون
-================================== */
+/* ================= الدفع ================= */
 
-document.getElementById("complete-sale-btn")?.addEventListener("click", () => {
-
-    if (cart.length === 0) {
-        alert("السلة فارغة");
-        return;
-    }
-
-    cart.forEach(item=>{
-        const product = inventory.find(p=>p.id===item.id);
-        product.stock -= item.qty;
+document.querySelectorAll(".payment-option").forEach(option=>{
+    option.addEventListener("click",function(){
+        document.querySelectorAll(".payment-option").forEach(o=>o.classList.remove("active"));
+        this.classList.add("active");
+        selectedPayment=this.dataset.payment;
+        document.getElementById("customer-select").style.display =
+            selectedPayment==="credit"?"block":"none";
     });
-
-    alert("تمت عملية البيع وتم خصم الكمية من المخزون ✅");
-
-    cart = [];
-    document.getElementById("paid-amount").value = "";
-    renderCart();
-    renderProducts();
-    renderInventoryCards();
 });
 
-/* ==================================
-   الدفع
-================================== */
-
-function calculateChange() {
-    let paid = parseFloat(document.getElementById("paid-amount").value) || 0;
-    let total = parseFloat(document.getElementById("total").innerText);
-
-    let change = paid - total;
-
+function calculateChange(){
+    let paid=parseFloat(document.getElementById("paid-amount").value)||0;
+    let total=parseFloat(document.getElementById("total").innerText);
+    let change=paid-total;
     document.getElementById("change-display").innerText =
-        change > 0 ? change.toFixed(2) + " ر.س" : "0.00 ر.س";
+        change>0?change.toFixed(2)+" ر.س":"0.00 ر.س";
 }
 
-document.getElementById("paid-amount")?.addEventListener("input", calculateChange);
+document.getElementById("paid-amount")?.addEventListener("input",calculateChange);
 
-/* ==================================
-   تشغيل أولي
-================================== */
+/* ================= إتمام البيع ================= */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.getElementById("complete-sale-btn")?.addEventListener("click",()=>{
+
+    if(cart.length===0) return alert("السلة فارغة");
+
+    // خصم المخزون
+    cart.forEach(item=>{
+        const product=inventory.find(p=>p.id===item.id);
+        product.stock-=item.qty;
+    });
+
+    let subtotal=parseFloat(document.getElementById("subtotal").innerText);
+    let tax=parseFloat(document.getElementById("tax").innerText);
+    let total=parseFloat(document.getElementById("total").innerText);
+
+    let invoiceNumber="INV-"+(invoices.length+1).toString().padStart(4,"0");
+
+    invoices.push({
+        number:invoiceNumber,
+        type:"بيع POS",
+        party:selectedPayment==="credit"
+              ? document.getElementById("customer-list").selectedOptions[0].text
+              : "عميل نقدي",
+        date:new Date().toLocaleDateString(),
+        total:total,
+        status:selectedPayment==="credit"?"معلقة":"مدفوعة"
+    });
+
+    renderInvoices();
+
+    alert("تم إنشاء الفاتورة رقم "+invoiceNumber+" ✅");
+
+    cart=[];
+    document.getElementById("paid-amount").value="";
+    renderCart();
     renderProducts();
-    renderInventoryCards();
+});
+
+/* ================= عرض الفواتير ================= */
+
+function renderInvoices(){
+    const table=document.getElementById("invoices-table-body");
+    if(!table) return;
+    table.innerHTML="";
+
+    invoices.forEach(inv=>{
+        table.innerHTML+=`
+        <tr>
+            <td>${inv.number}</td>
+            <td>${inv.type}</td>
+            <td>${inv.party}</td>
+            <td>${inv.date}</td>
+            <td>${inv.total.toFixed(2)} ر.س</td>
+            <td>
+                <span class="status-badge ${
+                    inv.status==="مدفوعة"?"status-paid":"status-pending"
+                }">${inv.status}</span>
+            </td>
+            <td>—</td>
+        </tr>`;
+    });
+}
+
+/* ================= تشغيل أولي ================= */
+
+document.addEventListener("DOMContentLoaded",()=>{
+    renderProducts();
+    renderInvoices();
 });
 
 </script>
