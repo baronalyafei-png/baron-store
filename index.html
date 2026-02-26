@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Baron Electronics</title>
+
+  <style>
+    :root{
+      --accent:#B53CB8;
+      --bg:#ffffff;
+      --text:#111;
+    }
+
+    [data-theme="dark"]{
+      --bg:#000000;
+      --text:#EFEFEF;
+    }
+
+    body{
+      margin:0;
+      font-family:system-ui;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    header{
+      display:flex;
+      justify-content:space-between;
+      padding:20px 30px;
+      background:linear-gradient(90deg,rgba(181,60,184,.15),transparent);
+      backdrop-filter:blur(12px);
+    }
+
+    nav a{
+      margin:0 10px;
+      text-decoration:none;
+      color:var(--text);
+      font-weight:600;
+    }
+
+    .page{padding:40px}
+    .hidden{display:none}
+
+    .btn{
+      background:linear-gradient(90deg,var(--accent),#7a1fa2);
+      color:#fff;
+      padding:10px 18px;
+      border:none;
+      border-radius:12px;
+      cursor:pointer;
+      margin-top:10px;
+    }
+
+    input{
+      padding:10px;
+      margin:6px 0;
+      width:250px;
+    }
+
+    .card{
+      background:rgba(181,60,184,.08);
+      padding:15px;
+      border-radius:15px;
+      margin:10px 0;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div><strong>Baron Electronics</strong></div>
+  <nav>
+    <a href="#home">الرئيسية</a>
+    <a href="#store">المتجر</a>
+    <a href="#dashboard" id="dashboardLink" style="display:none">لوحة التحكم</a>
+    <a href="#login" id="loginLink">تسجيل الدخول</a>
+  </nav>
+</header>
+
+<main>
+  <section id="home" class="page">مرحبًا بك في متجر Baron الفاخر 👑</section>
+
+  <section id="store" class="page hidden">
+    <h2>المتجر</h2>
+    <div id="products"></div>
+  </section>
+
+  <section id="login" class="page hidden">
+    <h2>تسجيل الدخول</h2>
+
+    <input type="email" id="email" placeholder="البريد الإلكتروني" /><br>
+    <input type="password" id="password" placeholder="كلمة المرور" /><br>
+    <button class="btn" id="emailLogin">دخول بالايميل</button>
+    <button class="btn" id="googleLogin">دخول بجوجل</button>
+  </section>
+
+  <section id="dashboard" class="page hidden">
+    <h2>لوحة تحكم الأدمن</h2>
+    <button class="btn" id="logout">تسجيل خروج</button>
+    <div class="card">
+      <h3>إضافة منتج</h3>
+      <input id="productTitle" placeholder="اسم المنتج" />
+      <input id="productPrice" placeholder="السعر" />
+      <button class="btn" id="addProduct">إضافة</button>
+    </div>
+    <div id="adminProducts"></div>
+  </section>
+</main>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCVF7sTj4HEdOCPLY7ptIGXk616QS8Y-CU",
+  authDomain: "baron-stor-system.firebaseapp.com",
+  projectId: "baron-stor-system",
+  storageBucket: "baron-stor-system.firebasestorage.app",
+  messagingSenderId: "658891221940",
+  appId: "1:658891221940:web:dbfa217d64a3d0d8b860e1"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ضع UID الأدمن هنا
+const ADMIN_UID = "FvM2JCM6jdb7bTbn5vC5GigVffy1";
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
+  document.getElementById(id)?.classList.remove('hidden');
+}
+
+window.addEventListener('hashchange',()=>{
+  showPage(location.hash.replace('#','')||'home');
+});
+
+// تسجيل دخول ايميل
+emailLogin.onclick = async ()=>{
+  const email = document.getElementById('email').value;
+  const pass = document.getElementById('password').value;
+  await signInWithEmailAndPassword(auth,email,pass);
+};
+
+// تسجيل دخول جوجل
+const provider = new GoogleAuthProvider();
+googleLogin.onclick = async ()=>{
+  await signInWithPopup(auth,provider);
+};
+
+// مراقبة المستخدم
+onAuthStateChanged(auth,user=>{
+  if(user){
+    loginLink.style.display="none";
+    if(user.uid===ADMIN_UID){
+      dashboardLink.style.display="inline";
+    }
+  }else{
+    loginLink.style.display="inline";
+    dashboardLink.style.display="none";
+  }
+});
+
+// تسجيل خروج
+logout.onclick=()=>signOut(auth);
+
+// إضافة منتج
+addProduct.onclick=async ()=>{
+  const title=document.getElementById('productTitle').value;
+  const price=document.getElementById('productPrice').value;
+  await addDoc(collection(db,'products'),{title,price});
+  alert('تم إضافة المنتج');
+  loadProducts();
+};
+
+// عرض المنتجات
+async function loadProducts(){
+  const snap=await getDocs(collection(db,'products'));
+  let html="";
+  snap.forEach(doc=>{
+    html+=`<div class='card'>${doc.data().title} - ${doc.data().price}</div>`;
+  });
+  document.getElementById('products').innerHTML=html;
+  document.getElementById('adminProducts').innerHTML=html;
+}
+
+loadProducts();
+
+</script>
+
+</body>
+</html>
