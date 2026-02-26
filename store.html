@@ -1,10 +1,127 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>المتجر | Baron Electronics</title>
-  <link rel="stylesheet" href="assets/css/main.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المتجر | Baron Electronics</title>
+
+<style>
+:root{
+  --accent:#B53CB8;
+  --bg:#ffffff;
+  --text:#111;
+  --card:#f5f5f7;
+}
+
+[data-theme="dark"]{
+  --bg:#000000;
+  --text:#EFEFEF;
+  --card:#111111;
+}
+
+body{
+  margin:0;
+  font-family:system-ui;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* Header */
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:20px 40px;
+  backdrop-filter:blur(15px);
+  background:linear-gradient(90deg,rgba(181,60,184,.15),transparent);
+}
+
+header nav a{
+  margin:0 15px;
+  text-decoration:none;
+  color:var(--text);
+  font-weight:600;
+}
+
+/* Hero Banner */
+.hero{
+  padding:80px 40px;
+  background:linear-gradient(135deg,#B53CB8 0%,#000 100%);
+  color:white;
+  text-align:center;
+}
+
+.hero h1{
+  font-size:40px;
+  margin-bottom:15px;
+}
+
+/* Grid */
+.products{
+  padding:60px 40px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:30px;
+}
+
+/* Product Card */
+.card{
+  background:var(--card);
+  padding:25px;
+  border-radius:20px;
+  transition:.3s;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 10px 25px rgba(181,60,184,.1);
+}
+
+.card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 20px 40px rgba(181,60,184,.3);
+}
+
+.card h3{
+  margin:15px 0 10px;
+}
+
+.price{
+  color:var(--accent);
+  font-weight:bold;
+  font-size:18px;
+}
+
+/* Glass Button */
+.btn{
+  margin-top:15px;
+  background:linear-gradient(90deg,var(--accent),#7a1fa2);
+  color:white;
+  border:none;
+  padding:10px 18px;
+  border-radius:14px;
+  cursor:pointer;
+  transition:.3s;
+}
+
+.btn:hover{
+  transform:scale(1.05);
+  box-shadow:0 10px 25px rgba(181,60,184,.4);
+}
+
+/* Footer */
+footer{
+  text-align:center;
+  padding:40px;
+  background:#111;
+  color:#aaa;
+  margin-top:60px;
+}
+
+.toggle{
+  cursor:pointer;
+}
+</style>
 </head>
+
 <body>
 
 <header>
@@ -13,67 +130,52 @@
     <a href="index.html">الرئيسية</a>
     <a href="store.html">المتجر</a>
     <a href="subscriptions.html">الاشتراكات</a>
-    <a href="login.html" id="loginLink">تسجيل الدخول</a>
-    <a href="dashboard/index.html" id="dashboardLink" style="display:none;">لوحة التحكم</a>
+    <a class="toggle" onclick="toggleTheme()">🌓</a>
   </nav>
 </header>
 
-<section style="padding:40px">
-  <h1>المتجر</h1>
-  <div id="productsContainer"></div>
+<section class="hero">
+  <h1>اكتشف أحدث الأجهزة التقنية</h1>
+  <p>منتجات فاخرة – أداء استثنائي – تجربة مختلفة 👑</p>
 </section>
 
-<script type="module">
+<section class="products">
 
-import { auth, db } from "./assets/js/firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+  <div class="card">
+    <h3>iPhone 15 Pro</h3>
+    <div class="price">4500 دينار</div>
+    <button class="btn">أضف إلى السلة</button>
+  </div>
 
-// UID الأدمن (ضع نفس UID الموجود عندك)
-const ADMIN_UID = "ضع_هنا_UID_الادمن";
+  <div class="card">
+    <h3>Galaxy S24 Ultra</h3>
+    <div class="price">4200 دينار</div>
+    <button class="btn">أضف إلى السلة</button>
+  </div>
 
-// التحكم في إظهار لوحة التحكم
-onAuthStateChanged(auth, (user) => {
-  if (user && user.uid === ADMIN_UID) {
-    document.getElementById("dashboardLink").style.display = "inline";
-  }
-});
+  <div class="card">
+    <h3>MacBook Pro M3</h3>
+    <div class="price">6800 دينار</div>
+    <button class="btn">أضف إلى السلة</button>
+  </div>
 
-// تحميل المنتجات
-async function loadProducts() {
-  const querySnapshot = await getDocs(collection(db, "products"));
-  const container = document.getElementById("productsContainer");
-  container.innerHTML = "";
+  <div class="card">
+    <h3>Apple Watch Ultra</h3>
+    <div class="price">1500 دينار</div>
+    <button class="btn">أضف إلى السلة</button>
+  </div>
 
-  querySnapshot.forEach((doc) => {
-    const product = doc.data();
+</section>
 
-    container.innerHTML += `
-      <div style="
-        background:rgba(181,60,184,.08);
-        padding:20px;
-        margin:15px 0;
-        border-radius:15px;
-      ">
-        <h3>${product.title}</h3>
-        <p>السعر: ${product.price} دينار</p>
-        <button style="
-          background:linear-gradient(90deg,#B53CB8,#7a1fa2);
-          color:#fff;
-          border:none;
-          padding:10px 15px;
-          border-radius:10px;
-          cursor:pointer;
-        ">
-          أضف إلى السلة
-        </button>
-      </div>
-    `;
-  });
+<footer>
+  © 2026 Baron Electronics — Luxury Tech Experience
+</footer>
+
+<script>
+function toggleTheme(){
+  const current=document.documentElement.getAttribute("data-theme");
+  document.documentElement.setAttribute("data-theme", current==="dark"?"light":"dark");
 }
-
-loadProducts();
-
 </script>
 
 </body>
