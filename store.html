@@ -1,1 +1,80 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>المتجر | Baron Electronics</title>
+  <link rel="stylesheet" href="assets/css/main.css">
+</head>
+<body>
 
+<header>
+  <div><strong>Baron Electronics</strong></div>
+  <nav>
+    <a href="index.html">الرئيسية</a>
+    <a href="store.html">المتجر</a>
+    <a href="subscriptions.html">الاشتراكات</a>
+    <a href="login.html" id="loginLink">تسجيل الدخول</a>
+    <a href="dashboard/index.html" id="dashboardLink" style="display:none;">لوحة التحكم</a>
+  </nav>
+</header>
+
+<section style="padding:40px">
+  <h1>المتجر</h1>
+  <div id="productsContainer"></div>
+</section>
+
+<script type="module">
+
+import { auth, db } from "./assets/js/firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+
+// UID الأدمن (ضع نفس UID الموجود عندك)
+const ADMIN_UID = "ضع_هنا_UID_الادمن";
+
+// التحكم في إظهار لوحة التحكم
+onAuthStateChanged(auth, (user) => {
+  if (user && user.uid === ADMIN_UID) {
+    document.getElementById("dashboardLink").style.display = "inline";
+  }
+});
+
+// تحميل المنتجات
+async function loadProducts() {
+  const querySnapshot = await getDocs(collection(db, "products"));
+  const container = document.getElementById("productsContainer");
+  container.innerHTML = "";
+
+  querySnapshot.forEach((doc) => {
+    const product = doc.data();
+
+    container.innerHTML += `
+      <div style="
+        background:rgba(181,60,184,.08);
+        padding:20px;
+        margin:15px 0;
+        border-radius:15px;
+      ">
+        <h3>${product.title}</h3>
+        <p>السعر: ${product.price} دينار</p>
+        <button style="
+          background:linear-gradient(90deg,#B53CB8,#7a1fa2);
+          color:#fff;
+          border:none;
+          padding:10px 15px;
+          border-radius:10px;
+          cursor:pointer;
+        ">
+          أضف إلى السلة
+        </button>
+      </div>
+    `;
+  });
+}
+
+loadProducts();
+
+</script>
+
+</body>
+</html>
