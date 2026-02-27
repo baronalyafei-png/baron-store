@@ -8,132 +8,140 @@
 <style>
 :root{
   --accent:#B53CB8;
-  --accent-glow:#d46cff;
-  --bg:#0a0a0f;
-  --card:#111118;
+  --bg:#0b0b12;
+  --card:#15151f;
   --text:#EFEFEF;
 }
 
 body{
   margin:0;
   font-family:system-ui;
-  background:radial-gradient(circle at 20% 30%, rgba(181,60,184,.15), transparent 40%),
-             radial-gradient(circle at 80% 70%, rgba(181,60,184,.1), transparent 40%),
-             var(--bg);
+  background:var(--bg);
   color:var(--text);
-  overflow-x:hidden;
 }
 
-/* Header */
+/* HEADER */
 header{
   display:flex;
   justify-content:space-between;
   align-items:center;
   padding:20px 50px;
-  backdrop-filter:blur(15px);
-  background:rgba(0,0,0,.6);
+  background:#111;
   border-bottom:1px solid rgba(181,60,184,.3);
 }
 
-header nav a{
-  margin:0 18px;
+.logo{
+  font-weight:bold;
+  font-size:22px;
+}
+
+nav{
+  display:flex;
+  align-items:center;
+}
+
+nav a{
+  margin:0 20px;
   text-decoration:none;
   color:var(--text);
   font-weight:600;
-  transition:.3s;
 }
 
-header nav a:hover{
-  color:var(--accent-glow);
-  text-shadow:0 0 10px var(--accent-glow);
+.account{
+  width:35px;
+  height:35px;
+  border-radius:50%;
+  background:var(--accent);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  cursor:pointer;
 }
 
-/* Hero */
+/* HERO */
 .hero{
-  padding:100px 40px;
-  text-align:center;
-  position:relative;
+  height:400px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#B53CB8,#000);
+  font-size:36px;
+  font-weight:bold;
 }
 
-.hero h1{
-  font-size:48px;
-  background:linear-gradient(90deg,#fff,var(--accent-glow));
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  margin-bottom:20px;
+/* CATEGORIES */
+.categories{
+  display:flex;
+  justify-content:center;
+  gap:40px;
+  padding:60px 20px;
 }
 
-.hero p{
-  color:#aaa;
-  font-size:18px;
+.cat{
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  background:#1c1c28;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:.3s;
+  border:2px solid rgba(181,60,184,.3);
 }
 
-/* Products Grid */
+.cat:hover{
+  box-shadow:0 0 20px var(--accent);
+}
+
+/* SECTION TITLE */
+.section{
+  padding:40px 60px;
+}
+
+.section h2{
+  margin-bottom:30px;
+}
+
+/* PRODUCTS GRID */
 .products{
-  padding:60px 60px 100px;
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-  gap:35px;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:25px;
 }
 
-/* Card */
 .card{
   background:var(--card);
-  padding:30px;
-  border-radius:22px;
-  position:relative;
-  transition:.4s;
-  transform-style:preserve-3d;
-  border:1px solid rgba(181,60,184,.2);
-  backdrop-filter:blur(15px);
-  opacity:0;
-  transform:translateY(40px);
-}
-
-.card.show{
-  opacity:1;
-  transform:translateY(0);
+  padding:20px;
+  border-radius:18px;
+  transition:.3s;
 }
 
 .card:hover{
-  transform:rotateX(5deg) rotateY(-5deg) scale(1.03);
-  box-shadow:0 0 30px rgba(181,60,184,.6);
+  transform:translateY(-5px);
+  box-shadow:0 0 20px rgba(181,60,184,.5);
 }
 
-.card h3{
-  margin-bottom:10px;
+/* BANNER */
+.banner{
+  height:200px;
+  margin:60px;
+  border-radius:20px;
+  background:linear-gradient(90deg,#000,#B53CB8);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:24px;
 }
 
-.price{
-  color:var(--accent-glow);
-  font-size:20px;
-  font-weight:bold;
-  margin:15px 0;
-}
-
-/* Neon Button */
-.btn{
-  background:transparent;
-  border:2px solid var(--accent);
-  color:var(--accent-glow);
-  padding:10px 18px;
-  border-radius:30px;
-  cursor:pointer;
-  transition:.3s;
-}
-
-.btn:hover{
-  background:var(--accent);
-  color:#fff;
-  box-shadow:0 0 20px var(--accent-glow);
-}
-
-/* Footer */
+/* FOOTER */
 footer{
-  text-align:center;
-  padding:40px;
-  border-top:1px solid rgba(181,60,184,.3);
-  color:#777;
+  background:#111;
+  padding:60px;
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:30px;
 }
 </style>
 </head>
@@ -141,68 +149,79 @@ footer{
 <body>
 
 <header>
-  <div><strong>Baron Electronics</strong></div>
+  <div class="logo">Baron</div>
+
   <nav>
-    <a href="index.html">الرئيسية</a>
-    <a href="store.html">المتجر</a>
-    <a href="subscriptions.html">الاشتراكات</a>
+    <a href="#">الرئيسية</a>
+    <a href="#">المتجر</a>
+    <a href="#">الاشتراكات</a>
   </nav>
+
+  <div class="account">B</div>
 </header>
 
-<section class="hero">
-  <h1>Futuristic Tech Collection</h1>
-  <p>تقنية الغد بين يديك — تجربة فاخرة بلا حدود 👑</p>
-</section>
+<div class="hero">
+  بانر دعائي ديناميكي
+</div>
 
-<section class="products">
+<div class="categories">
+  <div class="cat">جديد</div>
+  <div class="cat">مستعمل</div>
+  <div class="cat">اكسسوارات</div>
+  <div class="cat">صوتيات</div>
+</div>
 
-  <div class="card">
-    <h3>iPhone 15 Pro</h3>
-    <div class="price">4500 دينار</div>
-    <button class="btn">أضف إلى السلة</button>
+<div class="section">
+  <h2>منتجات جديدة</h2>
+  <div class="products">
+    <div class="card">منتج</div>
+    <div class="card">منتج</div>
+    <div class="card">منتج</div>
   </div>
+</div>
 
-  <div class="card">
-    <h3>Galaxy S24 Ultra</h3>
-    <div class="price">4200 دينار</div>
-    <button class="btn">أضف إلى السلة</button>
+<div class="section">
+  <h2>اكسسوارات جديدة</h2>
+  <div class="products">
+    <div class="card">منتج</div>
+    <div class="card">منتج</div>
   </div>
+</div>
 
-  <div class="card">
-    <h3>MacBook Pro M3</h3>
-    <div class="price">6800 دينار</div>
-    <button class="btn">أضف إلى السلة</button>
+<div class="banner">
+  بانر دعائي
+</div>
+
+<div class="section">
+  <h2>اجهزة مستعملة</h2>
+  <div class="products">
+    <div class="card">منتج</div>
   </div>
+</div>
 
-  <div class="card">
-    <h3>Apple Watch Ultra</h3>
-    <div class="price">1500 دينار</div>
-    <button class="btn">أضف إلى السلة</button>
+<div class="section">
+  <h2>نظام صوتي</h2>
+  <div class="products">
+    <div class="card">منتج</div>
   </div>
+</div>
 
-</section>
+<div class="banner">
+  بانر دعائي
+</div>
+
+<div class="section">
+  <h2>اجهزة جديدة</h2>
+  <div class="products">
+    <div class="card">منتج</div>
+  </div>
+</div>
 
 <footer>
-  © 2026 Baron Electronics — Futuristic Luxury Experience
+  <div>المعلومات</div>
+  <div>اللوجو</div>
+  <div>التواصل / السوشيال</div>
 </footer>
-
-<script>
-// Scroll Animation
-const cards = document.querySelectorAll(".card");
-
-function reveal(){
-  const trigger = window.innerHeight * 0.85;
-  cards.forEach(card=>{
-    const top = card.getBoundingClientRect().top;
-    if(top < trigger){
-      card.classList.add("show");
-    }
-  });
-}
-
-window.addEventListener("scroll",reveal);
-reveal();
-</script>
 
 </body>
 </html>
