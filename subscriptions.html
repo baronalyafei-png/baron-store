@@ -1,1 +1,1345 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بارون | اشتراكات رقمية</title>
+  <!-- Google Fonts & Font Awesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
+    :root {
+      --accent: #B53CB8;
+      --accent-glow: #d46cff;
+      --bg: #0a0a12;
+      --bg-card: #151520;
+      --text-primary: #EFEFEF;
+      --text-secondary: #a0a0b0;
+      --border-glow: rgba(181, 60, 184, 0.3);
+      --shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.5);
+      --transition: all 0.3s ease;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: 
+        radial-gradient(circle at 10% 30%, rgba(181, 60, 184, 0.12) 0%, transparent 30%),
+        radial-gradient(circle at 90% 70%, rgba(181, 60, 184, 0.1) 0%, transparent 30%),
+        var(--bg);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 60px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-glow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    }
+
+    .logo {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #fff, var(--accent-glow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    nav {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 600;
+      transition: var(--transition);
+      position: relative;
+      font-size: 1.1rem;
+    }
+
+    nav a::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -4px;
+      left: 0;
+      background: var(--accent-glow);
+      box-shadow: 0 0 10px var(--accent-glow);
+      transition: width 0.3s;
+    }
+
+    nav a:hover {
+      color: #fff;
+      text-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    nav a:hover::after {
+      width: 100%;
+    }
+
+    .user-actions {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      position: relative;
+    }
+
+    /* زر الحساب (أيقونة فقط) */
+    .account-btn {
+      background: linear-gradient(135deg, var(--accent), #7a1fa2);
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 0 20px var(--accent-glow);
+      transition: var(--transition);
+      border: none;
+      color: white;
+      font-size: 1.3rem;
+    }
+
+    .account-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 30px var(--accent-glow);
+    }
+
+    /* القائمة المنسدلة للحساب */
+    .account-dropdown {
+      position: absolute;
+      top: 60px;
+      left: 0;
+      width: 280px;
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid var(--accent);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 0 1px var(--accent-glow);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .account-dropdown.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .account-dropdown .user-name {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--accent-glow);
+    }
+
+    .account-dropdown .btn {
+      width: 100%;
+      margin-top: 10px;
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--accent-glow);
+      padding: 10px;
+      border-radius: 40px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .account-dropdown .btn:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .privacy-note {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px dashed var(--border-glow);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .cart-icon {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.1);
+      padding: 10px 18px;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid var(--border-glow);
+      font-weight: 600;
+    }
+
+    .cart-icon i {
+      font-size: 1.2rem;
+      color: var(--accent-glow);
+    }
+
+    .cart-icon:hover {
+      background: rgba(255,255,255,0.2);
+      border-color: var(--accent);
+    }
+
+    /* HERO (كاروسيل) */
+    .hero {
+      height: 450px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      background-color: #2a1a3a;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      z-index: 1;
+    }
+
+    .hero-slide.active {
+      opacity: 1;
+      z-index: 2;
+    }
+
+    .hero-slide::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(181,60,184,0.3));
+      z-index: 1;
+    }
+
+    .hero-slide span {
+      position: relative;
+      z-index: 2;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(5px);
+      padding: 10px 30px;
+      border-radius: 60px;
+      box-shadow: 0 0 40px var(--accent-glow);
+      font-size: 3rem;
+      font-weight: 800;
+    }
+
+    .hero-slide small {
+      position: relative;
+      z-index: 2;
+      font-size: 1.5rem;
+      margin-top: 20px;
+      background: rgba(0,0,0,0.3);
+      padding: 5px 20px;
+      border-radius: 40px;
+    }
+
+    /* شريط البحث */
+    .search-bar {
+      padding: 30px 80px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .search-container {
+      display: flex;
+      width: 100%;
+      max-width: 700px;
+      background: var(--bg-card);
+      border: 2px solid var(--border-glow);
+      border-radius: 60px;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(181, 60, 184, 0.3);
+      transition: var(--transition);
+    }
+
+    .search-container:focus-within {
+      box-shadow: 0 0 50px var(--accent-glow);
+      border-color: var(--accent);
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 18px 25px;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 1.2rem;
+      outline: none;
+    }
+
+    .search-input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .search-btn {
+      background: var(--accent);
+      border: none;
+      padding: 0 30px;
+      color: white;
+      font-size: 1.4rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .search-btn:hover {
+      background: var(--accent-glow);
+    }
+
+    /* الفئات بصورة دائرية */
+    .categories {
+      display: flex;
+      overflow-x: auto;
+      gap: 30px;
+      padding: 40px 80px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .categories::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cat {
+      flex: 0 0 130px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      scroll-snap-align: start;
+    }
+
+    .cat-image {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--accent);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+      transition: var(--transition);
+    }
+
+    .cat-image:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px var(--accent-glow);
+      border-color: var(--accent-glow);
+    }
+
+    .cat span {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* الأقسام */
+    .section {
+      padding: 60px 80px;
+    }
+
+    .section h2 {
+      margin-bottom: 40px;
+      font-size: 2rem;
+      font-weight: 700;
+      display: inline-block;
+      position: relative;
+    }
+
+    .section h2 i {
+      color: var(--accent-glow);
+      margin-left: 10px;
+    }
+
+    .section h2::after {
+      content: "";
+      position: absolute;
+      bottom: -10px;
+      right: 0;
+      width: 100px;
+      height: 4px;
+      background: var(--accent);
+      box-shadow: 0 0 15px var(--accent-glow);
+      border-radius: 4px;
+    }
+
+    /* شبكة المنتجات */
+    .subscriptions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 30px;
+    }
+
+    /* حاوية المنتج: البطاقة والزر أسفلها */
+    .product-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sub-card {
+      background: rgba(20, 15, 30, 0.9);
+      backdrop-filter: blur(10px);
+      border-radius: 32px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(181, 60, 184, 0.3);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      height: 400px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .sub-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 30px 60px rgba(181, 60, 184, 0.4), 0 0 0 2px var(--accent);
+    }
+
+    .card-image {
+      height: 60%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+
+    .sub-card:hover .card-image img {
+      transform: scale(1.1);
+    }
+
+    .card-image::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    }
+
+    .card-icon {
+      position: absolute;
+      bottom: 10px;
+      right: 15px;
+      width: 50px;
+      height: 50px;
+      background: rgba(181, 60, 184, 0.3);
+      backdrop-filter: blur(8px);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--accent-glow);
+      box-shadow: 0 0 20px var(--accent-glow);
+      z-index: 2;
+    }
+
+    .card-icon i {
+      font-size: 1.8rem;
+      color: white;
+      text-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .card-details {
+      height: 40%;
+      padding: 16px;
+      background: rgba(10, 8, 15, 0.8);
+      backdrop-filter: blur(5px);
+      border-top: 1px dashed var(--accent);
+    }
+
+    .card-details h3 {
+      font-size: 1.3rem;
+      margin-bottom: 6px;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .price {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent-glow);
+      margin: 2px 0;
+      display: inline-block;
+      background: rgba(0,0,0,0.3);
+      padding: 2px 8px;
+      border-radius: 30px;
+    }
+
+    .period {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      font-size: 0.8rem;
+      display: inline-block;
+      margin-right: 8px;
+    }
+
+    .features-list {
+      list-style: none;
+      margin-top: 8px;
+      font-size: 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .features-list li {
+      background: rgba(181, 60, 184, 0.1);
+      padding: 3px 10px;
+      border-radius: 30px;
+      border: 1px solid rgba(181, 60, 184, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .features-list i {
+      color: var(--accent);
+      font-size: 0.7rem;
+    }
+
+    .product-action-btn {
+      width: 100%;
+      padding: 12px 0;
+      border-radius: 50px;
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-add {
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--accent-glow);
+    }
+
+    .btn-add:hover {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 25px var(--accent-glow);
+    }
+
+    .btn-remove {
+      background: #ff4444;
+      border: 2px solid #ff4444;
+      color: white;
+    }
+
+    .btn-remove:hover {
+      background: #ff6666;
+      box-shadow: 0 0 25px #ff6666;
+    }
+
+    /* البانرات */
+    .banner {
+      height: 260px;
+      margin: 40px 80px;
+      border-radius: 40px;
+      background-size: cover;
+      background-position: center;
+      background-color: #2a1a3a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      font-weight: 800;
+      box-shadow: 0 20px 40px rgba(181, 60, 184, 0.4);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+      padding: 20px;
+      transition: transform 0.5s ease;
+    }
+
+    .banner:hover {
+      transform: scale(1.02);
+    }
+
+    .banner::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(0,0,0,0.5), rgba(181,60,184,0.3));
+      z-index: 1;
+    }
+
+    .banner span, .banner small {
+      position: relative;
+      z-index: 2;
+      text-shadow: 2px 2px 10px black;
+    }
+
+    .banner small {
+      font-size: 1.2rem;
+      opacity: 0.9;
+      margin-top: 10px;
+      background: rgba(0,0,0,0.5);
+      padding: 5px 20px;
+      border-radius: 40px;
+    }
+
+    .banner-double {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 30px;
+      margin: 40px 80px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: x mandatory;
+    }
+
+    .banner-small {
+      flex: 1 1 calc(50% - 15px);
+      min-width: 260px;
+      height: 200px;
+      border-radius: 30px;
+      background-size: cover;
+      background-position: center;
+      background-color: #2a1a3a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      box-shadow: 0 15px 30px rgba(181, 60, 184, 0.4);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+      padding: 15px;
+      transition: transform 0.5s ease;
+      scroll-snap-align: start;
+    }
+
+    .banner-small:hover {
+      transform: scale(1.02);
+    }
+
+    .banner-small::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(0,0,0,0.5), rgba(181,60,184,0.3));
+      z-index: 1;
+    }
+
+    .banner-small span, .banner-small small {
+      position: relative;
+      z-index: 2;
+      text-shadow: 2px 2px 10px black;
+    }
+
+    .banner-small small {
+      font-size: 1rem;
+      margin-top: 8px;
+      background: rgba(0,0,0,0.5);
+      padding: 3px 15px;
+      border-radius: 30px;
+    }
+
+    /* الفوتر */
+    footer {
+      background: #0f0f16;
+      padding: 70px 80px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 50px;
+      border-top: 1px solid var(--border-glow);
+      margin-top: 60px;
+    }
+
+    .footer-col h4 {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      color: var(--accent-glow);
+    }
+
+    .footer-col ul {
+      list-style: none;
+    }
+
+    .footer-col li {
+      margin-bottom: 12px;
+    }
+
+    .footer-col a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .footer-col a:hover {
+      color: #fff;
+      transform: translateX(-5px);
+    }
+
+    .social-icons {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .social-icons a {
+      background: var(--bg-card);
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      border: 1px solid var(--border-glow);
+    }
+
+    .footer-logo {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--accent-glow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 20px;
+      letter-spacing: 2px;
+    }
+
+    /* المودال */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-card);
+      max-width: 600px;
+      width: 90%;
+      border-radius: 30px;
+      padding: 30px;
+      position: relative;
+      border: 1px solid var(--accent);
+      box-shadow: 0 0 50px var(--accent-glow);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 15px; left: 15px;
+      font-size: 2rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: var(--transition);
+    }
+
+    .modal-close:hover {
+      color: var(--accent-glow);
+    }
+
+    .modal-image {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .modal h2 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .modal-price {
+      font-size: 2.2rem;
+      color: var(--accent-glow);
+      font-weight: 800;
+      margin-bottom: 5px;
+    }
+
+    .modal-period {
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .modal-description {
+      margin-bottom: 20px;
+      line-height: 1.8;
+    }
+
+    .modal-features {
+      list-style: none;
+    }
+
+    .modal-features li {
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-features i {
+      color: var(--accent);
+    }
+
+    .btn {
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--accent-glow);
+      padding: 12px 18px;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-weight: 700;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .btn:hover {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 25px var(--accent-glow);
+    }
+
+    @media (max-width: 1024px) {
+      header, .section, .banner, .banner-double, footer { padding: 30px 40px; }
+      .hero-slide span { font-size: 2.2rem; }
+      .search-bar { padding: 30px 40px; }
+      .categories { padding: 30px 40px; }
+    }
+
+    @media (max-width: 768px) {
+      nav { gap: 20px; }
+      nav a { font-size: 1rem; }
+      .hero { height: 350px; }
+      .hero-slide span { font-size: 1.8rem; }
+      .banner { margin: 30px 20px; font-size: 1.8rem; height: 200px; }
+      .banner-double { margin: 30px 20px; }
+      .banner-small { min-width: 220px; font-size: 1.4rem; }
+      .sub-card { height: 350px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">BARON</div>
+    <nav>
+      <a href="#">الرئيسية</a>
+      <a href="#">المتجر</a>
+      <a href="#">الاشتراكات</a>
+      <a href="#">الطلبات</a>
+    </nav>
+    <div class="user-actions">
+      <div class="account-btn" id="accountBtn">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="account-dropdown" id="accountDropdown">
+        <div class="user-name" id="userName">زائر</div>
+        <button class="btn" id="loginBtn">تسجيل الدخول</button>
+        <button class="btn" id="logoutBtn" style="display: none;">تسجيل الخروج</button>
+        <div class="privacy-note">
+          <i class="fas fa-shield-alt"></i>
+          نحن لا نجمع بيانات العملاء إلا لعمليات التوصيل فقط.
+        </div>
+      </div>
+      <div class="cart-icon" id="cartIcon">
+        <i class="fas fa-shopping-bag"></i>
+        <span id="cartCount">0</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 1. البانر الرئيسي (كاروسيل) -->
+  <div class="hero" id="heroSlider">
+    <div class="hero-slide active" style="background-image: url('https://picsum.photos/id/40/1200/500');">
+      <span>اشتراكات رقمية 🔥</span>
+      <small>نتفلكس - شاهد - واتش ات - ألعاب</small>
+    </div>
+    <div class="hero-slide" style="background-image: url('https://picsum.photos/id/41/1200/500');">
+      <span>خصم 30% على أول اشتراك</span>
+      <small>استخدم كود: SUB30</small>
+    </div>
+    <div class="hero-slide" style="background-image: url('https://picsum.photos/id/42/1200/500');">
+      <span>اشتراكات سنوية بسعر مميز</span>
+      <small>وفر حتى 40%</small>
+    </div>
+  </div>
+
+  <!-- 2. البحث -->
+  <div class="search-bar">
+    <div class="search-container">
+      <input type="text" class="search-input" placeholder="ابحث عن اشتراك...">
+      <button class="search-btn"><i class="fas fa-search"></i></button>
+    </div>
+  </div>
+
+  <!-- 3. الفئات بصورة دائرية -->
+  <div class="categories">
+    <div class="cat">
+      <img class="cat-image" src="https://picsum.photos/id/40/200/200" alt="نتفلكس">
+      <span>نتفلكس</span>
+    </div>
+    <div class="cat">
+      <img class="cat-image" src="https://picsum.photos/id/41/200/200" alt="شاهد">
+      <span>شاهد</span>
+    </div>
+    <div class="cat">
+      <img class="cat-image" src="https://picsum.photos/id/42/200/200" alt="واتش ات">
+      <span>واتش ات</span>
+    </div>
+    <div class="cat">
+      <img class="cat-image" src="https://picsum.photos/id/43/200/200" alt="ألعاب">
+      <span>ألعاب</span>
+    </div>
+    <div class="cat">
+      <img class="cat-image" src="https://picsum.photos/id/44/200/200" alt="برامج">
+      <span>برامج</span>
+    </div>
+    <div class="cat">
+      <img class="cat-image" src="https://picsum.photos/id/45/200/200" alt="موسيقى">
+      <span>موسيقى</span>
+    </div>
+  </div>
+
+  <!-- 4. بانر كبير أول -->
+  <div class="banner" style="background-image: url('https://picsum.photos/id/43/1200/400');">
+    <span>عرض خاص: اشتراك نتفلكس لمدة 3 شهور</span>
+    <small>بسعر شهرين</small>
+  </div>
+
+  <!-- 5. قائمة نتفلكس -->
+  <div class="section">
+    <h2><i class="fab fa-netflix"></i> باقات نتفلكس</h2>
+    <div class="subscriptions-grid" id="netflixPlans"></div>
+  </div>
+
+  <!-- 6. بانر كبير ثانٍ -->
+  <div class="banner" style="background-image: url('https://picsum.photos/id/44/1200/400');">
+    <span>شاهد VIP بجودة 4K</span>
+    <small>خصم 25% لأول 100 مشترك</small>
+  </div>
+
+  <!-- 7. بانرين صغيرين (ألعاب وبرامج) -->
+  <div class="banner-double">
+    <div class="banner-small" style="background-image: url('https://picsum.photos/id/45/600/300');">
+      <span>ألعاب حصرية</span>
+      <small>خصم 20%</small>
+    </div>
+    <div class="banner-small" style="background-image: url('https://picsum.photos/id/46/600/300');">
+      <span>برامج احترافية</span>
+      <small>Adobe, Office</small>
+    </div>
+  </div>
+
+  <!-- 8. قائمة شاهد -->
+  <div class="section">
+    <h2><i class="fas fa-tv"></i> باقات شاهد</h2>
+    <div class="subscriptions-grid" id="shahidPlans"></div>
+  </div>
+
+  <!-- 9. بانر كبير ثالث -->
+  <div class="banner" style="background-image: url('https://picsum.photos/id/47/1200/400');">
+    <span>وفر مع الباقات السنوية</span>
+    <small>اشتراكات واتش ات و شاهد</small>
+  </div>
+
+  <!-- 10. قائمة ألعاب -->
+  <div class="section">
+    <h2><i class="fas fa-gamepad"></i> اشتراكات ألعاب</h2>
+    <div class="subscriptions-grid" id="gamePlans"></div>
+  </div>
+
+  <!-- 11. بانرين صغيرين آخرين -->
+  <div class="banner-double">
+    <div class="banner-small" style="background-image: url('https://picsum.photos/id/48/600/300');">
+      <span>باقة عائلية</span>
+      <small>4 أجهزة</small>
+    </div>
+    <div class="banner-small" style="background-image: url('https://picsum.photos/id/49/600/300');">
+      <span>شحن رصيد</span>
+      <small>Google Play</small>
+    </div>
+  </div>
+
+  <!-- 12. بانر كبير رابع -->
+  <div class="banner" style="background-image: url('https://picsum.photos/id/50/1200/400');">
+    <span>برامج وشحن بأسعار مخفضة</span>
+    <small>Microsoft, Adobe</small>
+  </div>
+
+  <!-- 13. قائمة برامج وشحن -->
+  <div class="section">
+    <h2><i class="fas fa-code"></i> برامج وشحن</h2>
+    <div class="subscriptions-grid" id="softwarePlans"></div>
+  </div>
+
+  <!-- 14. بانر ختامي -->
+  <div class="banner" style="background-image: url('https://picsum.photos/id/51/1200/400');">
+    <span>تسوق بأمان وسرعة</span>
+    <small>الدعم متاح 24/7</small>
+  </div>
+
+  <!-- الفوتر -->
+  <footer>
+    <div class="footer-col">
+      <h4>معلومات</h4>
+      <ul>
+        <li><a href="#"><i class="fas fa-chevron-left"></i> عن بارون</a></li>
+        <li><a href="#"><i class="fas fa-chevron-left"></i> الشحن والتوصيل</a></li>
+        <li><a href="#"><i class="fas fa-chevron-left"></i> سياسة الإرجاع</a></li>
+        <li><a href="#"><i class="fas fa-chevron-left"></i> وظائف</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>بارون</h4>
+      <ul>
+        <li><a href="#"><i class="fas fa-store"></i> المتجر</a></li>
+        <li><a href="#"><i class="fas fa-gem"></i> العروض</a></li>
+        <li><a href="#"><i class="fas fa-star"></i> المميز</a></li>
+        <li><a href="#"><i class="fas fa-phone-alt"></i> اتصل بنا</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-logo">BARON</div>
+      <h4>التواصل</h4>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-whatsapp"></i></a>
+      </div>
+      <p style="margin-top: 25px; color: var(--text-secondary);">
+        <i class="fas fa-envelope"></i> support@baron.com
+      </p>
+    </div>
+  </footer>
+
+  <!-- المودال -->
+  <div class="modal" id="detailModal">
+    <div class="modal-content">
+      <span class="modal-close" id="closeModal">&times;</span>
+      <img id="modalImage" class="modal-image" src="" alt="">
+      <h2 id="modalTitle"></h2>
+      <div class="modal-price" id="modalPrice"></div>
+      <div class="modal-period" id="modalPeriod"></div>
+      <div class="modal-description" id="modalDescription"></div>
+      <ul class="modal-features" id="modalFeatures"></ul>
+      <button class="btn" id="modalAddBtn"><i class="fas fa-cart-plus"></i> أضف إلى السلة</button>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // بيانات المنتجات
+      const plans = [
+        { id: 'net1', category: 'netflix', name: 'نتفلكس أساسي', price: 120, period: 'شهرياً', img: 'https://picsum.photos/id/40/300/200', icon: 'fab fa-netflix', description: 'باقة نتفلكس الأساسية للاستمتاع بالمحتوى بدقة HD على شاشة واحدة.', features: ['دقة HD', 'شاشة واحدة', 'مكتبة كاملة'] },
+        { id: 'net2', category: 'netflix', name: 'نتفلكس ستاندرد', price: 180, period: 'شهرياً', img: 'https://picsum.photos/id/41/300/200', icon: 'fab fa-netflix', description: 'باقة نتفلكس القياسية بدقة Full HD على شاشتين.', features: ['دقة Full HD', 'شاشتين', 'تحميل'] },
+        { id: 'net3', category: 'netflix', name: 'نتفلكس بريميوم', price: 240, period: 'شهرياً', img: 'https://picsum.photos/id/42/300/200', icon: 'fab fa-netflix', description: 'باقة نتفلكس بريميوم بدقة 4K على 4 شاشات.', features: ['دقة 4K', '4 شاشات', 'صوت محيطي'] },
+        { id: 'sh1', category: 'shahid', name: 'شاهد VIP', price: 90, period: 'شهرياً', img: 'https://picsum.photos/id/43/300/200', icon: 'fas fa-tv', description: 'شاهد VIP بجودة عالية بدون إعلانات.', features: ['جودة عالية', 'مسلسلات حصرية', 'بدون إعلانات'] },
+        { id: 'sh2', category: 'shahid', name: 'شاهد VIP+', price: 150, period: 'شهرياً', img: 'https://picsum.photos/id/44/300/200', icon: 'fas fa-tv', description: 'شاهد VIP+ بدقة 4K على 3 أجهزة.', features: ['دقة 4K', 'عرض على 3 أجهزة', 'محتوى أطفال'] },
+        { id: 'game1', category: 'games', name: 'PS Plus Essential', price: 200, period: 'شهرياً', img: 'https://picsum.photos/id/45/300/200', icon: 'fab fa-playstation', description: 'اشتراك PlayStation Plus Essential مع ألعاب شهرية.', features: ['ألعاب شهرية', 'تخزين سحابي', 'خصومات'] },
+        { id: 'game2', category: 'games', name: 'Xbox Game Pass', price: 180, period: 'شهرياً', img: 'https://picsum.photos/id/46/300/200', icon: 'fab fa-xbox', description: 'Xbox Game Pass مكتبة ضخمة من الألعاب.', features: ['مكتبة ضخمة', 'EA Play', 'ألعاب يوم1'] },
+        { id: 'soft1', category: 'software', name: 'Adobe Creative Cloud', price: 350, period: 'شهرياً', img: 'https://picsum.photos/id/47/300/200', icon: 'fas fa-paint-brush', description: 'جميع تطبيقات Adobe الإبداعية.', features: ['Photoshop, Premiere', '100GB تخزين'] },
+        { id: 'soft2', category: 'software', name: 'شحن Google Play', price: 50, period: 'مرة واحدة', img: 'https://picsum.photos/id/48/300/200', icon: 'fab fa-google-play', description: 'شحن رصيد Google Play بقيمة 50 دينار.', features: ['شحن فوري', 'لجميع الألعاب'] }
+      ];
+
+      // حالة العناصر المضافة
+      let addedItems = JSON.parse(localStorage.getItem('addedItems')) || {};
+
+      // عناصر
+      const netflixDiv = document.getElementById('netflixPlans');
+      const shahidDiv = document.getElementById('shahidPlans');
+      const gamesDiv = document.getElementById('gamePlans');
+      const softwareDiv = document.getElementById('softwarePlans');
+      const cartSpan = document.getElementById('cartCount');
+      const modal = document.getElementById('detailModal');
+      const closeModal = document.getElementById('closeModal');
+      const modalImage = document.getElementById('modalImage');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalPrice = document.getElementById('modalPrice');
+      const modalPeriod = document.getElementById('modalPeriod');
+      const modalDescription = document.getElementById('modalDescription');
+      const modalFeatures = document.getElementById('modalFeatures');
+      const modalAddBtn = document.getElementById('modalAddBtn');
+
+      let currentProduct = null;
+
+      // تحديث عداد السلة الكلي
+      function updateCartTotal() {
+        const total = Object.values(addedItems).filter(v => v).length;
+        cartSpan.textContent = total;
+        localStorage.setItem('addedItems', JSON.stringify(addedItems));
+      }
+
+      // إنشاء عنصر منتج كامل (البطاقة + الزر أسفلها)
+      function createProductElement(plan) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'product-wrapper';
+        wrapper.dataset.id = plan.id;
+
+        // البطاقة
+        const card = document.createElement('div');
+        card.className = 'sub-card';
+
+        // الصورة
+        const imageDiv = document.createElement('div');
+        imageDiv.className = 'card-image';
+        const img = document.createElement('img');
+        img.src = plan.img;
+        img.alt = plan.name;
+        imageDiv.appendChild(img);
+        const iconDiv = document.createElement('div');
+        iconDiv.className = 'card-icon';
+        iconDiv.innerHTML = `<i class="${plan.icon}"></i>`;
+        imageDiv.appendChild(iconDiv);
+
+        // التفاصيل
+        const detailsDiv = document.createElement('div');
+        detailsDiv.className = 'card-details';
+        const title = document.createElement('h3');
+        title.textContent = plan.name;
+        const pricePeriod = document.createElement('div');
+        pricePeriod.style.display = 'flex';
+        pricePeriod.style.alignItems = 'center';
+        pricePeriod.style.gap = '8px';
+        const priceDiv = document.createElement('span');
+        priceDiv.className = 'price';
+        priceDiv.textContent = plan.price + ' دينار';
+        const periodDiv = document.createElement('span');
+        periodDiv.className = 'period';
+        periodDiv.textContent = plan.period;
+        pricePeriod.appendChild(priceDiv);
+        pricePeriod.appendChild(periodDiv);
+        const features = document.createElement('ul');
+        features.className = 'features-list';
+        plan.features.slice(0, 3).forEach(f => {
+          const li = document.createElement('li');
+          li.innerHTML = `<i class="fas fa-check-circle"></i> ${f}`;
+          features.appendChild(li);
+        });
+
+        detailsDiv.appendChild(title);
+        detailsDiv.appendChild(pricePeriod);
+        detailsDiv.appendChild(features);
+
+        card.appendChild(imageDiv);
+        card.appendChild(detailsDiv);
+
+        // الزر
+        const actionBtn = document.createElement('button');
+        actionBtn.className = 'product-action-btn';
+        const isAdded = addedItems[plan.id] || false;
+        if (isAdded) {
+          actionBtn.classList.add('btn-remove');
+          actionBtn.innerHTML = '<i class="fas fa-trash-alt"></i> حذف';
+        } else {
+          actionBtn.classList.add('btn-add');
+          actionBtn.innerHTML = '<i class="fas fa-cart-plus"></i> إضافة';
+        }
+
+        actionBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (addedItems[plan.id]) {
+            delete addedItems[plan.id];
+            actionBtn.classList.remove('btn-remove');
+            actionBtn.classList.add('btn-add');
+            actionBtn.innerHTML = '<i class="fas fa-cart-plus"></i> إضافة';
+          } else {
+            addedItems[plan.id] = true;
+            actionBtn.classList.remove('btn-add');
+            actionBtn.classList.add('btn-remove');
+            actionBtn.innerHTML = '<i class="fas fa-trash-alt"></i> حذف';
+          }
+          updateCartTotal();
+        });
+
+        wrapper.appendChild(card);
+        wrapper.appendChild(actionBtn);
+
+        // فتح المودال عند الضغط على البطاقة
+        card.addEventListener('click', () => openModal(plan));
+
+        return wrapper;
+      }
+
+      // فتح المودال
+      function openModal(plan) {
+        currentProduct = plan;
+        modalImage.src = plan.img;
+        modalTitle.textContent = plan.name;
+        modalPrice.textContent = plan.price + ' دينار';
+        modalPeriod.textContent = plan.period;
+        modalDescription.textContent = plan.description;
+        modalFeatures.innerHTML = '';
+        plan.features.forEach(f => {
+          const li = document.createElement('li');
+          li.innerHTML = `<i class="fas fa-check-circle"></i> ${f}`;
+          modalFeatures.appendChild(li);
+        });
+        modal.classList.add('show');
+      }
+
+      // إغلاق المودال
+      closeModal.addEventListener('click', () => {
+        modal.classList.remove('show');
+      });
+      window.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('show');
+      });
+
+      // زر الإضافة في المودال
+      modalAddBtn.addEventListener('click', () => {
+        if (currentProduct) {
+          addedItems[currentProduct.id] = true;
+          updateCartTotal();
+          const wrapper = document.querySelector(`.product-wrapper[data-id="${currentProduct.id}"]`);
+          if (wrapper) {
+            const btn = wrapper.querySelector('.product-action-btn');
+            btn.classList.remove('btn-add');
+            btn.classList.add('btn-remove');
+            btn.innerHTML = '<i class="fas fa-trash-alt"></i> حذف';
+          }
+          modal.classList.remove('show');
+        }
+      });
+
+      // تصنيف الخطط
+      const netflixPlans = plans.filter(p => p.category === 'netflix');
+      const shahidPlans = plans.filter(p => p.category === 'shahid');
+      const gamePlans = plans.filter(p => p.category === 'games');
+      const softwarePlans = plans.filter(p => p.category === 'software');
+
+      netflixPlans.forEach(p => netflixDiv.appendChild(createProductElement(p)));
+      shahidPlans.forEach(p => shahidDiv.appendChild(createProductElement(p)));
+      gamePlans.forEach(p => gamesDiv.appendChild(createProductElement(p)));
+      softwarePlans.forEach(p => softwareDiv.appendChild(createProductElement(p)));
+
+      // تشغيل السلايدر
+      const slides = document.querySelectorAll('.hero-slide');
+      if (slides.length > 0) {
+        let currentSlide = 0;
+        setInterval(() => {
+          slides[currentSlide].classList.remove('active');
+          currentSlide = (currentSlide + 1) % slides.length;
+          slides[currentSlide].classList.add('active');
+        }, 5000);
+      }
+
+      updateCartTotal();
+
+      // وظائف الحساب
+      const accountBtn = document.getElementById('accountBtn');
+      const accountDropdown = document.getElementById('accountDropdown');
+      const userName = document.getElementById('userName');
+      const loginBtn = document.getElementById('loginBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+
+      let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+      function updateAccountUI() {
+        if (isLoggedIn) {
+          userName.textContent = 'مستخدم 1';
+          loginBtn.style.display = 'none';
+          logoutBtn.style.display = 'block';
+        } else {
+          userName.textContent = 'زائر';
+          loginBtn.style.display = 'block';
+          logoutBtn.style.display = 'none';
+        }
+      }
+
+      accountBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        accountDropdown.classList.toggle('show');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!accountBtn.contains(e.target) && !accountDropdown.contains(e.target)) {
+          accountDropdown.classList.remove('show');
+        }
+      });
+
+      loginBtn.addEventListener('click', () => {
+        isLoggedIn = true;
+        localStorage.setItem('isLoggedIn', 'true');
+        updateAccountUI();
+        accountDropdown.classList.remove('show');
+      });
+
+      logoutBtn.addEventListener('click', () => {
+        isLoggedIn = false;
+        localStorage.removeItem('isLoggedIn');
+        updateAccountUI();
+        accountDropdown.classList.remove('show');
+      });
+
+      updateAccountUI();
+    })();
+  </script>
+</body>
+</html>
