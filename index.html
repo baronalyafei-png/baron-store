@@ -1,197 +1,468 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Baron Electronics</title>
-
-  <style>
-    :root{
-      --accent:#B53CB8;
-      --bg:#ffffff;
-      --text:#111;
-    }
-
-    [data-theme="dark"]{
-      --bg:#000000;
-      --text:#EFEFEF;
-    }
-
-    body{
-      margin:0;
-      font-family:system-ui;
-      background:var(--bg);
-      color:var(--text);
-    }
-
-    header{
-      display:flex;
-      justify-content:space-between;
-      padding:20px 30px;
-      background:linear-gradient(90deg,rgba(181,60,184,.15),transparent);
-      backdrop-filter:blur(12px);
-    }
-
-    nav a{
-      margin:0 10px;
-      text-decoration:none;
-      color:var(--text);
-      font-weight:600;
-    }
-
-    .page{padding:40px}
-    .hidden{display:none}
-
-    .btn{
-      background:linear-gradient(90deg,var(--accent),#7a1fa2);
-      color:#fff;
-      padding:10px 18px;
-      border:none;
-      border-radius:12px;
-      cursor:pointer;
-      margin-top:10px;
-    }
-
-    input{
-      padding:10px;
-      margin:6px 0;
-      width:250px;
-    }
-
-    .card{
-      background:rgba(181,60,184,.08);
-      padding:15px;
-      border-radius:15px;
-      margin:10px 0;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>بارون | الموقع الرسمي</title>
+  <!-- Google Fonts: Cairo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- AOS for scroll animations -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="css/main.css">
 </head>
-
 <body>
+  <!-- حاوية THREE.js -->
+  <div id="canvas-container"></div>
 
-<header>
-  <div><strong>Baron Electronics</strong></div>
-  <nav>
-    <a href="#home">الرئيسية</a>
-    <a href="#store">المتجر</a>
-    <a href="#dashboard" id="dashboardLink" style="display:none">لوحة التحكم</a>
-    <a href="#login" id="loginLink">تسجيل الدخول</a>
-  </nav>
-</header>
-
-<main>
-  <section id="home" class="page">مرحبًا بك في متجر Baron الفاخر 👑</section>
-
-  <section id="store" class="page hidden">
-    <h2>المتجر</h2>
-    <div id="products"></div>
-  </section>
-
-  <section id="login" class="page hidden">
-    <h2>تسجيل الدخول</h2>
-
-    <input type="email" id="email" placeholder="البريد الإلكتروني" /><br>
-    <input type="password" id="password" placeholder="كلمة المرور" /><br>
-    <button class="btn" id="emailLogin">دخول بالايميل</button>
-    <button class="btn" id="googleLogin">دخول بجوجل</button>
-  </section>
-
-  <section id="dashboard" class="page hidden">
-    <h2>لوحة تحكم الأدمن</h2>
-    <button class="btn" id="logout">تسجيل خروج</button>
-    <div class="card">
-      <h3>إضافة منتج</h3>
-      <input id="productTitle" placeholder="اسم المنتج" />
-      <input id="productPrice" placeholder="السعر" />
-      <button class="btn" id="addProduct">إضافة</button>
+  <header>
+    <div class="logo">BARON</div>
+    <nav>
+      <a class="nav-link active" data-section="home">الرئيسية</a>
+      <a class="nav-link" data-section="store">المتجر</a>
+      <a class="nav-link" data-section="subscriptions">الاشتراكات</a>
+      <a class="nav-link" data-section="orders">الطلبات</a>
+    </nav>
+    <div class="user-actions">
+      <div class="account-btn" id="accountBtn">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="cart-btn" id="cartBtn">
+        <i class="fas fa-shopping-bag"></i>
+        <span id="cartCount">0</span>
+      </div>
+      <div class="account-dropdown" id="accountDropdown">
+        <div class="user-name" id="userName">زائر</div>
+        <button class="btn" id="logoutBtn" style="display: none;">تسجيل الخروج</button>
+        <div class="privacy-note">
+          <i class="fas fa-shield-alt"></i>
+          نحن لا نجمع بيانات العملاء إلا لعمليات التوصيل فقط.
+        </div>
+      </div>
     </div>
-    <div id="adminProducts"></div>
+  </header>
+
+  <!-- الصفحة الرئيسية -->
+  <section id="home-section" class="section active">
+    <div class="hero">
+      <div class="hero-content" data-aos="fade-up" data-aos-duration="1000">
+        <h1>بارون</h1>
+        <p>عالم الأجهزة الإلكترونية الفاخرة</p>
+        <div class="hero-buttons">
+          <a href="#" class="hero-btn primary" data-section-link="store">تسوق الآن</a>
+          <a href="#" class="hero-btn secondary" data-section-link="subscriptions">اكتشف الاشتراكات</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- بانرات الرئيسية الإضافية -->
+    <div class="home-banners">
+      <div class="home-banner" data-aos="fade-up">
+        <i class="fas fa-tags"></i>
+        <h3>خصومات تصل إلى 30%</h3>
+        <p>على أحدث الأجهزة الذكية</p>
+      </div>
+      <div class="home-banner" data-aos="fade-up" data-aos-delay="100">
+        <i class="fas fa-truck"></i>
+        <h3>توصيل مجاني</h3>
+        <p>للطلبات فوق 1000 دينار</p>
+      </div>
+      <div class="home-banner" data-aos="fade-up" data-aos-delay="200">
+        <i class="fas fa-shield-alt"></i>
+        <h3>ضمان عام كامل</h3>
+        <p>على جميع المنتجات</p>
+      </div>
+    </div>
+
+    <!-- أحدث المنتجات (عينة) -->
+    <div class="section" style="padding-top: 0;">
+      <h2 class="section-title"><i class="fas fa-star"></i> أحدث المنتجات</h2>
+      <div class="products-grid" id="home-products"></div>
+    </div>
+
+    <!-- دعاية الصيانة -->
+    <div class="maintenance-banner" data-aos="flip-up">
+      <div class="maintenance-content">
+        <h2>خدمة الصيانة</h2>
+        <p>نقدم خدمة صيانة احترافية لجميع الأجهزة الإلكترونية بأسعار رمزية. اتصل بنا الآن!</p>
+        <a href="#" class="maintenance-btn" data-section-link="store">تواصل معنا</a>
+      </div>
+      <div class="maintenance-image">
+        <img src="https://images.pexels.com/photos/5082571/pexels-photo-5082571.jpeg?auto=compress&cs=tinysrgb&w=600" alt="صيانة">
+      </div>
+    </div>
+
+    <!-- عروض خاصة -->
+    <div class="section">
+      <h2 class="section-title"><i class="fas fa-fire"></i> عروض حصرية</h2>
+      <div class="offers-grid">
+        <div class="offer-card" data-aos="zoom-in">
+          <i class="fas fa-mobile-alt"></i>
+          <h3>هواتف ذكية</h3>
+          <p>خصم يصل إلى 30% على أحدث الموديلات</p>
+          <span class="discount">30%</span>
+        </div>
+        <div class="offer-card" data-aos="zoom-in" data-aos-delay="100">
+          <i class="fas fa-laptop"></i>
+          <h3>لابتوبات</h3>
+          <p>عروض خاصة على أجهزة MacBook و Dell</p>
+          <span class="discount">25%</span>
+        </div>
+        <div class="offer-card" data-aos="zoom-in" data-aos-delay="200">
+          <i class="fas fa-tablet-alt"></i>
+          <h3>أجهزة لوحية</h3>
+          <p>آيباد بأسعار لا تقبل المنافسة</p>
+          <span class="discount">20%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- لماذا بارون -->
+    <div class="section">
+      <h2 class="section-title"><i class="fas fa-check-circle"></i> لماذا بارون</h2>
+      <div class="features-grid">
+        <div class="feature">
+          <i class="fas fa-shield-alt"></i>
+          <h3>ضمان الجودة</h3>
+          <p>جميع المنتجات أصلية ومضمونة</p>
+        </div>
+        <div class="feature">
+          <i class="fas fa-bolt"></i>
+          <h3>أداء عالي</h3>
+          <p>أحدث الأجهزة بأعلى المواصفات</p>
+        </div>
+        <div class="feature">
+          <i class="fas fa-truck"></i>
+          <h3>توصيل سريع</h3>
+          <p>شحن مجاني للطلبات فوق 1000 دينار</p>
+        </div>
+        <div class="feature">
+          <i class="fas fa-headset"></i>
+          <h3>دعم فني</h3>
+          <p>فريق متخصص لخدمتك 24/7</p>
+        </div>
+      </div>
+    </div>
   </section>
-</main>
 
-<script type="module">
+  <!-- صفحة المتجر -->
+  <section id="store-section" class="section">
+    <h2 class="section-title"><i class="fas fa-store"></i> المتجر</h2>
+    <!-- بانرات المتجر -->
+    <div class="store-banners">
+      <div class="store-banner">
+        <i class="fas fa-bolt"></i>
+        <h3>شحن سريع</h3>
+        <p>توصيل خلال 24 ساعة</p>
+      </div>
+      <div class="store-banner">
+        <i class="fas fa-undo-alt"></i>
+        <h3>إرجاع مجاني</h3>
+        <p>خلال 14 يوم</p>
+      </div>
+      <div class="store-banner">
+        <i class="fas fa-credit-card"></i>
+        <h3>تقسيط بدون فوائد</h3>
+        <p>حتى 12 شهر</p>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <div class="search-box">
+        <input type="text" id="store-search" placeholder="ابحث عن منتج...">
+        <button><i class="fas fa-search"></i></button>
+      </div>
+      <div class="category-filter" id="store-categories">
+        <button class="category-btn active" data-category="all">الكل</button>
+        <button class="category-btn" data-category="new">جديد</button>
+        <button class="category-btn" data-category="used">مستعمل</button>
+        <button class="category-btn" data-category="accessories">اكسسوارات</button>
+        <button class="category-btn" data-category="audio">صوتيات</button>
+      </div>
+    </div>
+    <div class="products-grid" id="store-products"></div>
+  </section>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-firestore.js";
+  <!-- صفحة الاشتراكات -->
+  <section id="subscriptions-section" class="section">
+    <h2 class="section-title"><i class="fas fa-ticket-alt"></i> الاشتراكات الرقمية</h2>
+    <!-- بانرات الاشتراكات -->
+    <div class="store-banners">
+      <div class="store-banner">
+        <i class="fab fa-netflix"></i>
+        <h3>نتفلكس</h3>
+        <p>اشتراكات بأسعار خاصة</p>
+      </div>
+      <div class="store-banner">
+        <i class="fas fa-tv"></i>
+        <h3>شاهد VIP</h3>
+        <p>عروض حصرية</p>
+      </div>
+      <div class="store-banner">
+        <i class="fas fa-gamepad"></i>
+        <h3>ألعاب</h3>
+        <p>PS Plus - Xbox Game Pass</p>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <div class="search-box">
+        <input type="text" id="subs-search" placeholder="ابحث عن اشتراك...">
+        <button><i class="fas fa-search"></i></button>
+      </div>
+      <div class="category-filter" id="subs-categories">
+        <button class="category-btn active" data-category="all">الكل</button>
+        <button class="category-btn" data-category="netflix">نتفلكس</button>
+        <button class="category-btn" data-category="shahid">شاهد</button>
+        <button class="category-btn" data-category="games">ألعاب</button>
+        <button class="category-btn" data-category="software">برامج</button>
+      </div>
+    </div>
+    <div class="subscriptions-grid" id="subscriptions-products"></div>
+  </section>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCVF7sTj4HEdOCPLY7ptIGXk616QS8Y-CU",
-  authDomain: "baron-stor-system.firebaseapp.com",
-  projectId: "baron-stor-system",
-  storageBucket: "baron-stor-system.firebasestorage.app",
-  messagingSenderId: "658891221940",
-  appId: "1:658891221940:web:dbfa217d64a3d0d8b860e1"
-};
+  <!-- صفحة الطلبات -->
+  <section id="orders-section" class="section">
+    <h2 class="section-title"><i class="fas fa-box-open"></i> طلباتي</h2>
+    <div class="filter-bar">
+      <div class="search-box">
+        <input type="text" id="orders-search" placeholder="ابحث برقم الطلب...">
+        <button><i class="fas fa-search"></i></button>
+      </div>
+    </div>
+    <div class="orders-grid" id="orders-list"></div>
+  </section>
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+  <!-- الفوتر (يظهر فقط في الصفحة الرئيسية) -->
+  <footer id="main-footer">
+    <div class="footer-col">
+      <h4>معلومات</h4>
+      <ul>
+        <li><a href="#"><i class="fas fa-chevron-left"></i> عن بارون</a></li>
+        <li><a href="#"><i class="fas fa-chevron-left"></i> الشحن والتوصيل</a></li>
+        <li><a href="#"><i class="fas fa-chevron-left"></i> سياسة الإرجاع</a></li>
+        <li><a href="#"><i class="fas fa-chevron-left"></i> وظائف</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>بارون</h4>
+      <ul>
+        <li><a href="#"><i class="fas fa-store"></i> المتجر</a></li>
+        <li><a href="#"><i class="fas fa-gem"></i> الطلبات</a></li>
+        <li><a href="#"><i class="fas fa-star"></i> المميز</a></li>
+        <li><a href="#"><i class="fas fa-phone-alt"></i> اتصل بنا</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-logo">BARON</div>
+      <h4>التواصل</h4>
+      <div class="social-icons">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-whatsapp"></i></a>
+      </div>
+      <p style="margin-top: 25px; color: var(--text-secondary);">
+        <i class="fas fa-envelope"></i> support@baron.com
+      </p>
+    </div>
+  </footer>
 
-// ضع UID الأدمن هنا
-const ADMIN_UID = "FvM2JCM6jdb7bTbn5vC5GigVffy1";
+  <!-- المودالات -->
+  <!-- مودال تسجيل الدخول -->
+  <div class="auth-modal" id="authModal">
+    <div class="auth-modal-content">
+      <span class="auth-close" id="authClose">&times;</span>
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="loginTab">تسجيل الدخول</div>
+        <div class="auth-tab" id="registerTab">إنشاء حساب</div>
+      </div>
+      <div class="auth-form" id="loginForm">
+        <input type="email" placeholder="البريد الإلكتروني" id="loginEmail">
+        <input type="password" placeholder="كلمة المرور" id="loginPassword">
+        <button class="auth-btn" id="loginBtn">تسجيل الدخول</button>
+      </div>
+      <div class="auth-form" id="registerForm" style="display: none;">
+        <input type="text" placeholder="الاسم الكامل" id="registerName">
+        <input type="email" placeholder="البريد الإلكتروني" id="registerEmail">
+        <input type="password" placeholder="كلمة المرور" id="registerPassword">
+        <button class="auth-btn" id="registerBtn">إنشاء حساب</button>
+      </div>
+      <div class="auth-divider">أو</div>
+      <div class="auth-google">
+        <i class="fab fa-google"></i>
+        <span>تسجيل عبر Google</span>
+      </div>
+    </div>
+  </div>
 
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.add('hidden'));
-  document.getElementById(id)?.classList.remove('hidden');
-}
+  <!-- مودال تفاصيل المنتج/الاشتراك -->
+  <div class="product-modal" id="productModal">
+    <div class="product-modal-content">
+      <span class="product-modal-close" id="productModalClose">&times;</span>
+      <div class="product-modal-grid" id="productModalContent"></div>
+    </div>
+  </div>
 
-window.addEventListener('hashchange',()=>{
-  showPage(location.hash.replace('#','')||'home');
-});
+  <!-- مودال السلة -->
+  <div class="cart-modal" id="cartModal">
+    <div class="cart-modal-content">
+      <span class="cart-modal-close" id="cartModalClose">&times;</span>
+      <h2 style="text-align: center; margin-bottom: 20px;">سلة المشتريات</h2>
+      <div id="cartItemsContainer"></div>
+      
+      <!-- خيارات التوصيل -->
+      <div class="delivery-options" id="deliveryOptions">
+        <div class="delivery-option">
+          <input type="radio" name="deliveryMethod" id="storePickup" value="store" checked>
+          <label for="storePickup">الاستلام من المتجر</label>
+        </div>
+        <div class="delivery-option">
+          <input type="radio" name="deliveryMethod" id="homeDelivery" value="delivery">
+          <label for="homeDelivery">التوصيل (+ 5 دينار)</label>
+        </div>
+      </div>
 
-// تسجيل دخول ايميل
-emailLogin.onclick = async ()=>{
-  const email = document.getElementById('email').value;
-  const pass = document.getElementById('password').value;
-  await signInWithEmailAndPassword(auth,email,pass);
-};
+      <!-- نموذج التوصيل (يظهر عند اختيار التوصيل) -->
+      <div id="deliveryFormContainer" style="display: none;">
+        <div class="delivery-form">
+          <input type="text" placeholder="الاسم الكامل" id="deliveryName">
+          <input type="text" placeholder="العنوان" id="deliveryAddress">
+          <input type="tel" placeholder="رقم الهاتف" id="deliveryPhone">
+        </div>
+      </div>
 
-// تسجيل دخول جوجل
-const provider = new GoogleAuthProvider();
-googleLogin.onclick = async ()=>{
-  await signInWithPopup(auth,provider);
-};
+      <!-- المجموع مع تكلفة التوصيل -->
+      <div class="cart-total-container">
+        <span class="cart-total-label">المجموع:</span>
+        <span class="cart-total" id="cartTotal">0 دينار</span>
+      </div>
+      <div class="delivery-fee" id="deliveryFee" style="text-align: left;"></div>
 
-// مراقبة المستخدم
-onAuthStateChanged(auth,user=>{
-  if(user){
-    loginLink.style.display="none";
-    if(user.uid===ADMIN_UID){
-      dashboardLink.style.display="inline";
-    }
-  }else{
-    loginLink.style.display="inline";
-    dashboardLink.style.display="none";
-  }
-});
+      <button class="cart-checkout-btn" id="cartCheckout" disabled>إتمام الطلب</button>
+    </div>
+  </div>
 
-// تسجيل خروج
-logout.onclick=()=>signOut(auth);
+  <!-- Scripts -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Firebase (placeholder) -->
+  <script src="js/firebase.js"></script>
+  <!-- Auth Module -->
+  <script src="js/auth.js"></script>
+  <!-- Store Module -->
+  <script src="js/store.js"></script>
+  <!-- UI Module -->
+  <script src="js/ui.js"></script>
+  <!-- Main initialization -->
+  <script>
+    // تهيئة AOS
+    AOS.init({ duration: 800, once: true });
+    // تهيئة THREE.js (يمكن نقله لملف منفصل لكنه بسيط)
+    (function initThree() {
+      const container = document.getElementById('canvas-container');
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0a0a12);
 
-// إضافة منتج
-addProduct.onclick=async ()=>{
-  const title=document.getElementById('productTitle').value;
-  const price=document.getElementById('productPrice').value;
-  await addDoc(collection(db,'products'),{title,price});
-  alert('تم إضافة المنتج');
-  loadProducts();
-};
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 30;
 
-// عرض المنتجات
-async function loadProducts(){
-  const snap=await getDocs(collection(db,'products'));
-  let html="";
-  snap.forEach(doc=>{
-    html+=`<div class='card'>${doc.data().title} - ${doc.data().price}</div>`;
-  });
-  document.getElementById('products').innerHTML=html;
-  document.getElementById('adminProducts').innerHTML=html;
-}
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(renderer.domElement);
 
-loadProducts();
+      const ambientLight = new THREE.AmbientLight(0x404040);
+      scene.add(ambientLight);
+      const pointLight = new THREE.PointLight(0xB53CB8, 1, 50);
+      pointLight.position.set(10, 10, 10);
+      scene.add(pointLight);
 
-</script>
+      const particlesGeometry = new THREE.BufferGeometry();
+      const particlesCount = 2000;
+      const posArray = new Float32Array(particlesCount * 3);
+      const colorArray = new Float32Array(particlesCount * 3);
+      for(let i = 0; i < particlesCount * 3; i += 3) {
+        posArray[i] = (Math.random() - 0.5) * 100;
+        posArray[i+1] = (Math.random() - 0.5) * 100;
+        posArray[i+2] = (Math.random() - 0.5) * 100;
+        colorArray[i] = 0.7 + Math.random() * 0.3;
+        colorArray[i+1] = 0.2 + Math.random() * 0.3;
+        colorArray[i+2] = 0.8 + Math.random() * 0.4;
+      }
+      particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+      particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+      const particlesMaterial = new THREE.PointsMaterial({ size: 0.1, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending });
+      const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+      scene.add(particlesMesh);
 
+      const geometry = new THREE.IcosahedronGeometry(2, 0);
+      const material = new THREE.MeshStandardMaterial({ color: 0xB53CB8, emissive: 0x330033, wireframe: true });
+      const shape1 = new THREE.Mesh(geometry, material);
+      shape1.position.set(-10, 5, -20);
+      scene.add(shape1);
+
+      const geometry2 = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
+      const material2 = new THREE.MeshStandardMaterial({ color: 0xd46cff, emissive: 0x220033 });
+      const shape2 = new THREE.Mesh(geometry2, material2);
+      shape2.position.set(12, -3, -15);
+      scene.add(shape2);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        particlesMesh.rotation.y += 0.0002;
+        shape1.rotation.x += 0.01;
+        shape1.rotation.y += 0.01;
+        shape2.rotation.x += 0.02;
+        shape2.rotation.y += 0.01;
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
+
+    // بدء تشغيل التطبيق
+    window.app = {
+      quantities: JSON.parse(localStorage.getItem('cartQuantities')) || {},
+      isLoggedIn: localStorage.getItem('isLoggedIn') === 'true',
+      currentModalProduct: null,
+      currentModalType: 'product'
+    };
+
+    // تحديث عداد السلة (دالة مساعدة)
+    window.updateCartCount = function() {
+      const total = Object.values(window.app.quantities).reduce((a, b) => a + b, 0);
+      document.getElementById('cartCount').textContent = total;
+      localStorage.setItem('cartQuantities', JSON.stringify(window.app.quantities));
+    };
+
+    // استدعاء التهيئة
+    (function init() {
+      // تهيئة واجهة المستخدم
+      if (typeof window.ui !== 'undefined') {
+        window.ui.init();
+      }
+      // عرض المنتجات الأولية
+      if (typeof window.store !== 'undefined') {
+        window.store.renderStore();
+        window.store.renderSubscriptions();
+        window.store.renderOrders();
+        // عرض المنتجات في الصفحة الرئيسية (أحدث 3)
+        const homeDiv = document.getElementById('home-products');
+        if (homeDiv) {
+          window.store.storeProducts.slice(0, 3).forEach(p => homeDiv.appendChild(window.store.createProductCard(p)));
+        }
+      }
+      window.updateCartCount();
+    })();
+  </script>
 </body>
 </html>
